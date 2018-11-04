@@ -1,0 +1,14 @@
+fn function(self) −> u32 {
+	let Instruction(op) = self;
+	op >> 26
+}
+
+
+uint32_t Instruction::getInstructionCode() const
+{
+	return m_instruction >> 26;
+}
+
+
+
+
