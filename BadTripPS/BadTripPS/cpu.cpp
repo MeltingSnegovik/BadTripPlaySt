@@ -3,6 +3,13 @@
 #include <vector>
 
 
+uint32_t _map::contains(uint32_t addr) {
+	if (addr >= start_data && addr < (start_data + end_data))
+		return (addr - start_data);
+	else
+		return 0;
+};
+
 uint32_t _cpu:: WrappIntAdd(uint32_t pc, uint32_t incr) {
 	if ((pc + incr) > 0xffffffff)
 		return uint32_t()(pc + incr);
@@ -17,7 +24,7 @@ void _cpu::SetDebugOnBreak(bool enable) {
 void _cpu::RunNextInstruction() {
 	instruction_c=this->load32(pc);
 	pc= WrappIntAdd(pc,4);
-	this.decode_and_execute(instruction_c);	
+	this->decode_and_execute(instruction_c);	
 };
 
 

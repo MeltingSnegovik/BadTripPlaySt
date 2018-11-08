@@ -8,6 +8,20 @@
 
 #define BEGIN_BIOS 0xbfc00000
 
+
+struct _map
+{
+public:
+	uint32_t start_data;
+	uint32_t end_data;
+	uint32_t contains(uint32_t addr);
+	_map() :
+		start_data(0xbfc00000),
+		end_data(512 * 1024)
+	{};
+
+};
+
 struct _cpu
 {
 	public:
@@ -39,4 +53,5 @@ struct _cpu
 		uint32_t WrappIntAdd(uint32_t pc, uint32_t incr);
 		uint32_t DecodeAndExecute(_instruction instruction);		
 };
+
 	
