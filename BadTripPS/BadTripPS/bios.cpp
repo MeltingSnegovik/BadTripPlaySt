@@ -1,20 +1,14 @@
 #pragma once
 
-#define path "D:\cpp\BadTripPlaySt\BadTripPS\BadTripPS"
-
 #include <vector>
 #include <fstream>
+#include <string>
 
 #include "bios.h"
 
-
-	_bios::_bios()
-	{
-
-	};
-
-	_bios::BiosState _bios::load_bios() {
-		std::basic_ifstream<uint8_t> biosFile(path, std::ios::in | std::ios::binary); // char?
+	
+	_bios::BiosState _bios::LoadBios(std::string path_c) {
+		std::basic_ifstream<uint8_t> biosFile(path_c, std::ios::in | std::ios::binary); // char?
 
 		if (!biosFile.good())
 			return BIOS_STATE_INCORRECT_FILENAME;

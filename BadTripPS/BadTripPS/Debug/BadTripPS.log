@@ -1,0 +1,17 @@
+﻿  interconnect.cpp
+  instruction.cpp
+  cpu.cpp
+d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(9): warning C4353: nonstandard extension used: constant 0 as function expression.  Use '__noop' function intrinsic instead
+d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(72): error C2039: 's': is not a member of '_instruction'
+  d:\cpp\badtripplayst\badtripps\badtripps\instruction.h(6): note: see declaration of '_instruction'
+d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(81): error C2039: 's': is not a member of '_instruction'
+  d:\cpp\badtripplayst\badtripps\badtripps\instruction.h(6): note: see declaration of '_instruction'
+d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(113): error C2039: 's': is not a member of '_instruction'
+  d:\cpp\badtripplayst\badtripps\badtripps\instruction.h(6): note: see declaration of '_instruction'
+  PublicConst.cpp
+  BadTrip.cpp
+d:\cpp\badtripplayst\badtripps\badtripps\badtrip.cpp(11): warning C4129: 'c': unrecognized character escape sequence
+d:\cpp\badtripplayst\badtripps\badtripps\badtrip.cpp(11): warning C4129: 'B': unrecognized character escape sequence
+d:\cpp\badtripplayst\badtripps\badtripps\badtrip.cpp(11): warning C4129: 'S': unrecognized character escape sequence
+  Generating Code...
+d:\cpp\badtripplayst\badtripps\badtripps\interconnect.cpp(41): error C4716: '_interconnect::Load32': must return a value

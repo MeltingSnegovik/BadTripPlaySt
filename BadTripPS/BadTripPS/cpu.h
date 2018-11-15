@@ -5,10 +5,11 @@
 #include <vector>
 #include "instruction.h"
 #include "interconnect.h"
+#include "instruction.h"
 
 #define BEGIN_BIOS 0xbfc00000
 
-
+/*
 struct _map
 {
 public:
@@ -21,6 +22,7 @@ public:
 	{};
 
 };
+*/
 
 struct _cpu
 {
@@ -28,7 +30,7 @@ struct _cpu
 		uint32_t pc;
 		uint32_t next_pc;
 		uint32_t current_pc;
-//		uint32_t[32] regs_c;
+		uint32_t regs_c[32];
 		uint32_t hi;
 		uint32_t lo;
 		/*
@@ -39,19 +41,34 @@ struct _cpu
 		bool delay_slot;
 		bool debugonbreak;
 		_instruction instruction_c;
+		_instruction next_instruction;
 		_interconnect interconnect_c;
 		
 		_cpu(_interconnect inter):
 			pc(BEGIN_BIOS),
-			interconnect_c(inter)
+			interconnect_c(inter),
+			instruction_c(32),							// tbd
+			next_instruction(0x0)
 			{
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
 			};
+
 		void SetDebugOnBreak(bool enable);
 		void RunNextInstruction();
+		uint32_t Load32(uint32_t addr);
 		uint32_t WrappIntAdd(uint32_t pc, uint32_t incr);
-		uint32_t DecodeAndExecute(_instruction instruction);		
+		void DecodeAndExecute(_instruction instruction);
+		void OpLui(_instruction instruction);
+		uint32_t Reg(uint32_t index);
+		void SetReg(uint32_t index, uint32_t val);
+		void OpOri(_instruction instruction);
+		void Store32(uint32_t addr, uint32_t value);
+		void OpSw(_instruction instruction);
+		void OpSll(_instruction instruction);
+		void OpAddiu(_instruction instruction);
+		void OpJ(_instruction instruction);
+		void OpOr(_instruction instruction);
 };
-
+ 
 	
