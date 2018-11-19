@@ -6,9 +6,23 @@
 
 uint32_t _cpu:: WrappIntAdd(uint32_t pc, uint32_t incr) {
 	if ((pc + incr) > 0xffffffff)
-		return uint32_t()(pc + incr);
+		return (uint32_t)(pc + incr);
 	else
 		return 0x00000000;
+};
+
+uint32_t _cpu::WrappIntSub(uint32_t pc, uint32_t sub) {
+	if ((pc - sub) < 0x00000000)
+		return (uint32_t)(pc - sub);
+	else
+		return 0x00000000;
+};
+
+uint32_t _cpu::CheckedAdd(uint32_t s, uint32_t i) {
+	if ((uint64_t)s + (uint64_t)i)
+		return (int32_t)(s + i);
+	else
+		return -1;
 };
 
 void _cpu::SetDebugOnBreak(bool enable) {
@@ -51,10 +65,13 @@ void _cpu::DecodeAndExecute(_instruction instruction) {
 		case 0b101011:
 			OpSw(instruction);
 			break;
+		case 0b010000:
+			OpCop0(instruction);
+			break;
 		default:
 			std::cout << "error on DecodeAndExecute" << std::endl;
 			break;
-	}
+	};
 	// else return error
 };
 
@@ -76,6 +93,11 @@ void _cpu::OpOri(_instruction instruction) {
 };
 
 void _cpu::OpSw(_instruction instruction) {
+	if (StatReg & 0x1000 != 0) {
+		std::cout << "error in OpSw" << std::endl;
+		return;
+	}
+
 	uint32_t i = instruction.SignExt();
 	uint32_t t = instruction.RegIndex();
 	uint32_t s = instruction.s(); //tbd
@@ -129,3 +151,58 @@ void _cpu::OpOr(_instruction instruction) {
 	uint32_t v = Reg(s) | Reg(t);
 	SetReg(d, v);
 };
+
+void _cpu::OpCop0(_instruction instruction) {
+	switch (instruction.CopOpCode()) {
+	case 0b00100:
+		this->OpMtc0(instruction);
+		break;
+	default:
+		std::cout << "error in OpCop0" << std::endl;
+		break;
+	};
+};
+
+void _cpu::OpMtc0(_instruction instruction) {
+	uint32_t cpu_r = instruction.RegIndex();
+	uint32_t cop_r = instruction.RegInd15();
+
+	uint32_t v = this->Reg(cpu_r);
+	uint32_t answ;
+	switch (cop_r) {
+	case 12:
+		StatReg = v;
+		break;
+	default:
+		std::cout << "error in OpCop0 " << cop_r << std::endl;
+		break;
+	};
+};
+
+
+void _cpu::Branch(uint32_t offset) {
+	offset = offset << 2;
+	pc = WrappIntAdd(pc, offset);
+	pc = WrappIntSub(pc, 4);
+	this->pc = pc;
+};
+
+void _cpu::OpBne(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	uint32_t s = instruction.s();
+	uint32_t t = instruction.RegIndex();
+
+	if (Reg(s) != Reg(t)) {
+		Branch(i);
+	}
+};
+
+void _cpu::OpAddi(_instruction instruction) {
+	uint32_t i = (int32_t)instruction.SignExt();
+	uint32_t t = instruction.RegIndex;
+	uint32_t s = instruction.s();
+	s = (int32_t)Reg(s);
+
+	uint32_t answ=s.CheckedAdd(i)
+	
+}

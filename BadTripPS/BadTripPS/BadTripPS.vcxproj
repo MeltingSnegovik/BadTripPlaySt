@@ -32,7 +32,6 @@
     <ClCompile Include="instruction.cpp" />
     <ClCompile Include="interconnect.cpp" />
     <ClCompile Include="map.cpp" />
-    <ClCompile Include="PublicConst.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2B63F4B3-2DAE-43D6-931C-F64A3EF9B685}</ProjectGuid>

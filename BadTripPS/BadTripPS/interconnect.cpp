@@ -5,8 +5,8 @@
 
 uint32_t _interconnect::load32(uint32_t addr) {
 
-	_map BIOS_Range(0xbfc00000,512*1024);
-	uint32_t map_return = BIOS_Range.contains(addr);
+//	_map BIOS_Range(0xbfc00000,512*1024);
+	uint32_t map_return = BIOS.contains(addr);
 	if (map_return != -1)
 		return map_return;
 

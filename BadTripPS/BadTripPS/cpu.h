@@ -6,6 +6,7 @@
 #include "instruction.h"
 #include "interconnect.h"
 #include "instruction.h"
+#include "map.h"
 
 #define BEGIN_BIOS 0xbfc00000
 
@@ -37,6 +38,7 @@ struct _cpu
 		some non-standart definition
 		tbd
 		*/
+		uint32_t StatReg; //cop0 StatusRegister
 		bool branch;
 		bool delay_slot;
 		bool debugonbreak;
@@ -48,7 +50,8 @@ struct _cpu
 			pc(BEGIN_BIOS),
 			interconnect_c(inter),
 			instruction_c(32),							// tbd
-			next_instruction(0x0)
+			next_instruction(0x0),
+			StatReg(0)
 			{
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
@@ -58,6 +61,8 @@ struct _cpu
 		void RunNextInstruction();
 		uint32_t Load32(uint32_t addr);
 		uint32_t WrappIntAdd(uint32_t pc, uint32_t incr);
+		uint32_t WrappIntSub(uint32_t pc, uint32_t incr);
+		int32_t CheckedAdd(uint32_t what, uint32_t how);
 		void DecodeAndExecute(_instruction instruction);
 		void OpLui(_instruction instruction);
 		uint32_t Reg(uint32_t index);
@@ -69,6 +74,13 @@ struct _cpu
 		void OpAddiu(_instruction instruction);
 		void OpJ(_instruction instruction);
 		void OpOr(_instruction instruction);
+		void OpCop0(_instruction instruction);
+		void OpMtc0(_instruction instruction);
+		void Branch(uint32_t offset);
+		void OpBne(_instruction instruction);
+		//Add Immediate Unsigned
+		void OpAddi(_instruction instruction);
+
 };
  
 	

@@ -50,8 +50,5 @@
     <ClCompile Include="BadTrip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PublicConst.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
