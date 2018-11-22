@@ -24,5 +24,6 @@ public:
 	uint32_t Load32(uint32_t addr);
 	void Store16(uint32_t addr, uint16_t val);
 	void Store8(uint32_t addr, uint8_t val);
+	uint8_t Load8(uint32_t addr);
 };
 	

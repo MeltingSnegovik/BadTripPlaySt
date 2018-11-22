@@ -315,3 +315,26 @@ void _cpu::OpJr(_instruction instruction) {
 	pc = Reg(s);
 };
 
+uint8_t _cpu::Load8(uint32_t addr) {
+	interconnect_c.Load32(addr);
+};
+
+void _cpu::OpLb(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	int32_t v = (int8_t)Load8(addr);
+	d_regData= _registerData(t, (uint32_t)v);
+};
+
+void _cpu::OpBeq(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	if (Reg(s) == Reg(t)) {
+		Branch(i);
+	};
+}

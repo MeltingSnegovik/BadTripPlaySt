@@ -19,6 +19,7 @@ public:
 	std::vector<uint8_t> data;
 
 	uint32_t Load32(uint32_t offset);
+	uint8_t Load8(uint32_t offset);
 //	void NewPath();
 /*	_bios(std::string path_c):
 		path(path_c)

@@ -47,7 +47,7 @@ namespace pscx_memory {
 	_map SYSCONTROL(0x1f801000, 36);
 	_map SPU(0x1f801c00, 640);
 	_map EXPANSION2(0x1f802000, 66);
-
+	_map EXPANSION1(0x1f000000, 512 * 1024);
 
 	uint32_t mask_region(uint32_t addr) {
 		size_t index = addr >> 29;

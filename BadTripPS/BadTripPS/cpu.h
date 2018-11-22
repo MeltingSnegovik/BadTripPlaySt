@@ -103,11 +103,20 @@ struct _cpu
 		//Set on Less Then Unsigned
 		void OpSltu(_instruction instruction);
 		void OpAddu(_instruction instruction);
+
 		void Store16(uint32_t addr, uint16_t val);
+
 		void OpSh(_instruction instruction);
 		void OpJal(_instruction instruction);
 		void OpAndi(_instruction instruction);
 		void OpJr(_instruction instruction);
+
+		uint8_t Load8(uint32_t ddr);
+
+		//load byte (signed)
+		void OpLb(_instruction instruction);
+		// Branch if equal
+		void OpBeq(_instruction instruction);
 };
  
 	

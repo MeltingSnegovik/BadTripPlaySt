@@ -63,4 +63,19 @@ void _interconnect::Store8(uint32_t addr, uint8_t val) {
 	std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
 };
 
+uint8_t _interconnect::Load8(uint32_t addr) {
+	uint32_t abs_addr = pscx_memory::mask_region(addr);
+	uint32_t ans = BIOS.contains(abs_addr);
 
+	if (ans != (-1)) {
+		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
+		return Bios.Load8(ans);
+	};
+
+	uint32_t ans_exp = pscx_memory::EXPANSION1.contains(abs_addr);
+	if (ans_exp != (-1)) {
+		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
+		return 0xff;
+	};
+	std::cout << "Unhandled_load8_into_address: " << addr << std::endl;
+};
