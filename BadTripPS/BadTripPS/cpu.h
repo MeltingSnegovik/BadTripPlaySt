@@ -32,13 +32,17 @@ struct _cpu
 		uint32_t next_pc;
 		uint32_t current_pc;
 		uint32_t regs_c[32];
+		uint32_t out_regs[32];
+
 		uint32_t hi;
 		uint32_t lo;
 		/*
 		some non-standart definition
 		tbd
 		*/
-		uint32_t StatReg; //cop0 StatusRegister
+
+		// sr cop0 StatusRegister
+		uint32_t StatReg; 
 		bool branch;
 		bool delay_slot;
 		bool debugonbreak;
@@ -79,8 +83,8 @@ struct _cpu
 		void Branch(uint32_t offset);
 		void OpBne(_instruction instruction);
 		//Add Immediate Unsigned
-		void OpAddi(_instruction instruction);
-
+		void OpAddi(_instruction instruction); // Add integer 4+-1 good 0xfffffff+4 is overflow
+		void OpLw(_instruction instruction); //Load Word
 };
  
 	

@@ -18,11 +18,11 @@ uint32_t _cpu::WrappIntSub(uint32_t pc, uint32_t sub) {
 		return 0x00000000;
 };
 
-uint32_t _cpu::CheckedAdd(uint32_t s, uint32_t i) {
-	if ((uint64_t)s + (uint64_t)i)
-		return (int32_t)(s + i);
+int32_t _cpu::CheckedAdd(uint32_t what, uint32_t add) {
+	if ((uint64_t)what + (uint64_t)add <=0xFFFFFFFF)
+		return (int32_t)(what + add);
 	else
-		return -1;
+		return 0;
 };
 
 void _cpu::SetDebugOnBreak(bool enable) {
@@ -203,6 +203,31 @@ void _cpu::OpAddi(_instruction instruction) {
 	uint32_t s = instruction.s();
 	s = (int32_t)Reg(s);
 
-	uint32_t answ=s.CheckedAdd(i)
+	uint32_t answ = CheckedAdd(s, i);
+	uint32_t v;
+	switch (answ) {
+		case 0:
+			std::cout << "OpAddi overflow" << std::endl;
+			break;
+		default:
+			v = (uint32_t)answ;
+			break;
+		}
+	SetReg(t, v);
+};
+
+//OpLw load Word
+void _cpu::OpLw(_instruction instruction) {
+	if (StatReg & 0x10000 !=0) {
+		std::cout << "Ignoring_load_while_cache_is_isolated" << std::endl;
+		return;
+	}
+
+	uint32_t i = instruction.SignExt();
+	uint32_t t = instruction.RegIndex();
+	uint32_t s = instruction.s();
 	
-}
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	uint32_t v = Load32(addr);
+	SetReg(t, v);
+};
