@@ -3,6 +3,8 @@
 #include "interconnect.h"
 #include "map.h"
 
+using namespace pscx_memory;
+
 uint32_t _interconnect::load32(uint32_t addr) {
 
 //	_map BIOS_Range(0xbfc00000,512*1024);
@@ -39,3 +41,26 @@ uint32_t _interconnect::Load32(uint32_t addr) {
 	if (addr % 4 != 0)
 		std::cout << "Unaligned_load32_address: {:08x}" << addr << std::endl;
 };
+
+void _interconnect::Store16(uint32_t addr, uint16_t val) {
+	if (addr % 2 != 0)
+		std::cout << "Unaligned_store16_address: " << addr << std::endl;
+	uint32_t abs_addr = pscx_memory::mask_region(addr);
+	if (SPU.contains(abs_addr) != (-1)) {
+		std::cout << "Unaligned_write_to_SPU: " << SPU.contains(abs_addr) << std::endl;
+		return;
+	}
+	std::cout << "Unhandled_store16_into_address: " << addr << std::endl;
+};
+
+void _interconnect::Store8(uint32_t addr, uint8_t val) {
+	uint32_t abs_addr = pscx_memory::mask_region(addr);
+	uint32_t res = pscx_memory::EXPANSION2.contains(addr);
+	if (res != (-1)) {
+		std::cout << "Unhandled_store8_into_address: " << res << std::endl;
+		return;
+		}
+	std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
+};
+
+

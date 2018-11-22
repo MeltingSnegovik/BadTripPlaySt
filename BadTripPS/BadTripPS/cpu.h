@@ -7,6 +7,8 @@
 #include "interconnect.h"
 #include "instruction.h"
 #include "map.h"
+#include <cassert>
+#include <climits>
 
 #define BEGIN_BIOS 0xbfc00000
 
@@ -27,6 +29,16 @@ public:
 
 struct _cpu
 {
+	private:
+	struct _registerData
+	{
+		_regIndex	d_regIndex;
+		uint32_t	d_regValue;
+		_registerData(_regIndex regInd, uint32_t regVal) :
+			d_regIndex(regInd),
+			d_regValue(regVal)
+		{};
+	};
 	public:
 		uint32_t pc;
 		uint32_t next_pc;
@@ -49,13 +61,16 @@ struct _cpu
 		_instruction instruction_c;
 		_instruction next_instruction;
 		_interconnect interconnect_c;
+		//like a load in CPU
+		_registerData d_regData;
 		
 		_cpu(_interconnect inter):
 			pc(BEGIN_BIOS),
 			interconnect_c(inter),
 			instruction_c(32),							// tbd
 			next_instruction(0x0),
-			StatReg(0)
+			StatReg(0),
+			d_regData(_regIndex(0x0),0x0)
 			{
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
@@ -69,8 +84,8 @@ struct _cpu
 		int32_t CheckedAdd(uint32_t what, uint32_t how);
 		void DecodeAndExecute(_instruction instruction);
 		void OpLui(_instruction instruction);
-		uint32_t Reg(uint32_t index);
-		void SetReg(uint32_t index, uint32_t val);
+		uint32_t Reg(_regIndex index);
+		void SetReg(_regIndex index, uint32_t val);
 		void OpOri(_instruction instruction);
 		void Store32(uint32_t addr, uint32_t value);
 		void OpSw(_instruction instruction);
@@ -85,6 +100,14 @@ struct _cpu
 		//Add Immediate Unsigned
 		void OpAddi(_instruction instruction); // Add integer 4+-1 good 0xfffffff+4 is overflow
 		void OpLw(_instruction instruction); //Load Word
+		//Set on Less Then Unsigned
+		void OpSltu(_instruction instruction);
+		void OpAddu(_instruction instruction);
+		void Store16(uint32_t addr, uint16_t val);
+		void OpSh(_instruction instruction);
+		void OpJal(_instruction instruction);
+		void OpAndi(_instruction instruction);
+		void OpJr(_instruction instruction);
 };
  
 	

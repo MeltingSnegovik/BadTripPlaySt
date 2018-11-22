@@ -20,7 +20,7 @@ public:
 	uint32_t CopOpCode();
 
 	// like a t
-	uint32_t RegIndex();	
+	_regIndex RegIndex();	
 
 	// like a imm
 	uint32_t ImmValue();
@@ -29,7 +29,7 @@ public:
 	uint32_t SignExt();
 
 	// like a d
-	uint32_t RegInd15();
+	_regIndex RegInd15();
 
 	// like a shift
 	uint32_t Shift();

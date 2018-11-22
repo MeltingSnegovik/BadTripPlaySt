@@ -38,7 +38,11 @@ void _cpu::RunNextInstruction() {
 	_instruction new_instruction(Load32(pc));
 	next_instruction = new_instruction;
 	pc= WrappIntAdd(pc,4);
+	SetReg(d_regData.d_regIndex, d_regData.d_regValue);
 	this->DecodeAndExecute(instruction_c);
+
+	//in rust regs_c = out_regs;
+	std::copy(std::begin(out_regs), std::end(out_regs), std::begin(regs_c));
 };
 
 
@@ -77,7 +81,7 @@ void _cpu::DecodeAndExecute(_instruction instruction) {
 
 void _cpu::OpLui(_instruction instruction) {
 	uint32_t i = instruction.ImmValue();
-	uint32_t t = instruction.RegIndex();
+	_regIndex t = instruction.RegIndex();
 	uint32_t v = i << 16;
 
 	this->SetReg(t, v);
@@ -85,13 +89,14 @@ void _cpu::OpLui(_instruction instruction) {
 
 void _cpu::OpOri(_instruction instruction) {
 	uint32_t i = instruction.ImmValue();
-	uint32_t t = instruction.RegIndex();
+	_regIndex t = instruction.RegIndex();
 	uint32_t s = instruction.s(); // tbd
 
 	uint32_t v = this->Reg(s);
 	this->SetReg(t, v);
 };
 
+//Store Word
 void _cpu::OpSw(_instruction instruction) {
 	if (StatReg & 0x1000 != 0) {
 		std::cout << "error in OpSw" << std::endl;
@@ -99,7 +104,7 @@ void _cpu::OpSw(_instruction instruction) {
 	}
 
 	uint32_t i = instruction.SignExt();
-	uint32_t t = instruction.RegIndex();
+	_regIndex t = instruction.RegIndex();
 	uint32_t s = instruction.s(); //tbd
 	
 	uint32_t addr = WrappIntAdd(Reg(s),i);
@@ -107,12 +112,14 @@ void _cpu::OpSw(_instruction instruction) {
 	return Store32(addr, v);
 };
 
-uint32_t _cpu::Reg(uint32_t index) {
-	return regs_c[index];
+uint32_t _cpu::Reg(_regIndex index) {
+	assert(index.m_index < _countof(regs_c), "Reg Overflow");
+	return regs_c[index.m_index];
 };
 
-void _cpu::SetReg(uint32_t index, uint32_t value) {
-	regs_c[index] = value;
+void _cpu::SetReg(_regIndex index, uint32_t value) {
+	assert(index.m_index < _countof(regs_c), "Set Reg Overflow");
+	regs_c[index.m_index] = value;
 	regs_c[0] = 0;
 };
 
@@ -122,8 +129,8 @@ void _cpu::Store32(uint32_t addr, uint32_t value) {
 
 void _cpu::OpSll(_instruction instruction) {
 	uint32_t i = instruction.Shift();
-	uint32_t t = instruction.RegIndex();
-	uint32_t d = instruction.RegInd15();
+	_regIndex t = instruction.RegIndex();
+	_regIndex d = instruction.RegInd15();
 
 	uint32_t v = Reg(t) << i;
 	SetReg(d, v);
@@ -131,7 +138,7 @@ void _cpu::OpSll(_instruction instruction) {
 
 void _cpu::OpAddiu(_instruction instruction) {
 	uint32_t i = instruction.SignExt();
-	uint32_t t = instruction.RegIndex();
+	_regIndex t = instruction.RegIndex();
 	uint32_t s = instruction.s();
 
 	uint32_t v = WrappIntAdd(Reg(s), i);
@@ -144,12 +151,14 @@ void _cpu::OpJ(_instruction instruction) {
 };
 
 void _cpu::OpOr(_instruction instruction) {
+	/*
 	uint32_t d = instruction.RegInd15();
 	uint32_t s = instruction.s();
 	uint32_t t = instruction.RegIndex();
-
-	uint32_t v = Reg(s) | Reg(t);
 	SetReg(d, v);
+	uint32_t v = Reg(s) | Reg(t);
+	*/
+	SetReg(instruction.RegInd15(), Reg(instruction.s()) | Reg(instruction.RegIndex()))
 };
 
 void _cpu::OpCop0(_instruction instruction) {
@@ -164,17 +173,30 @@ void _cpu::OpCop0(_instruction instruction) {
 };
 
 void _cpu::OpMtc0(_instruction instruction) {
-	uint32_t cpu_r = instruction.RegIndex();
-	uint32_t cop_r = instruction.RegInd15();
+	_regIndex cpu_r = instruction.RegIndex();
+	_regIndex cop_r = instruction.RegInd15();
 
 	uint32_t v = this->Reg(cpu_r);
 	uint32_t answ;
-	switch (cop_r) {
+	switch (cop_r.m_index) {
+	case 3:
+	case 5:
+	case 6:
+	case 7:
+	case 9:
+	case 11:
+		if (v != 0)
+			std::cout << "Error in OpMtc0 cop_r" << std::endl;
+		break;
 	case 12:
 		StatReg = v;
 		break;
+	case 13:
+		if (v != 0)
+			std::cout << "Error in OpMtc0 V" << std::endl;
+		break;
 	default:
-		std::cout << "error in OpCop0 " << cop_r << std::endl;
+		std::cout << "error in OpCop0 register" << cop_r.m_index << std::endl;
 		break;
 	};
 };
@@ -184,13 +206,12 @@ void _cpu::Branch(uint32_t offset) {
 	offset = offset << 2;
 	pc = WrappIntAdd(pc, offset);
 	pc = WrappIntSub(pc, 4);
-	this->pc = pc;
 };
 
 void _cpu::OpBne(_instruction instruction) {
 	uint32_t i = instruction.SignExt();
 	uint32_t s = instruction.s();
-	uint32_t t = instruction.RegIndex();
+	_regIndex t = instruction.RegIndex();
 
 	if (Reg(s) != Reg(t)) {
 		Branch(i);
@@ -224,10 +245,73 @@ void _cpu::OpLw(_instruction instruction) {
 	}
 
 	uint32_t i = instruction.SignExt();
-	uint32_t t = instruction.RegIndex();
+	_regIndex t = instruction.RegIndex();
 	uint32_t s = instruction.s();
 	
 	uint32_t addr = WrappIntAdd(Reg(s), i);
 	uint32_t v = Load32(addr);
 	SetReg(t, v);
+	d_regData = _registerData(t, v);
 };
+
+void _cpu::OpSltu(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	uint32_t v = Reg(s) < Reg(t);
+	SetReg(d, v);
+};
+
+void _cpu::OpAddu(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+
+	
+	uint32_t  v = WrappIntAdd(Reg(s), Reg(t));
+	SetReg(d, v);
+};
+
+void _cpu::Store16(uint32_t addr, uint16_t val) {
+	interconnect_c.Store16(addr, val);
+};
+
+void _cpu::OpSh(_instruction instruction) {
+	if (StatReg & 0x10000 != 0) {
+		std::cout << "Error in OpSh" << std::endl;
+		return;
+	}
+
+	uint32_t i = instruction.SignExt();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	uint32_t v = Reg(t);
+
+	Store16(addr, (uint16_t) v);
+};
+
+void _cpu::OpJal(_instruction instruction) {
+	uint32_t ra = pc;
+	SetReg(_regIndex(31), ra);
+	OpJ(instruction);
+};
+
+void _cpu::OpAndi(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	uint32_t v = Reg(t);
+
+	Store8(addr, (uint8_t)v);
+};
+
+void _cpu::OpJr(_instruction instruction) {
+	_regIndex s = instruction.s();
+	pc = Reg(s);
+};
+
