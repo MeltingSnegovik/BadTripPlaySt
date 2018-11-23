@@ -3,6 +3,7 @@
 #include <vector>
 #include "bios.h"
 #include "map.h"
+#include "ram.h"
 
 #define START_CASH_DATA 0xbfc00000
 
@@ -11,7 +12,7 @@ struct _interconnect {
 public:
 	
 	_bios Bios;
-	_map MemControll;
+	_ram ram;
 
 	_interconnect(_bios bios) :
 		Bios(bios),

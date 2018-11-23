@@ -338,3 +338,45 @@ void _cpu::OpBeq(_instruction instruction) {
 		Branch(i);
 	};
 }
+
+void _cpu::OpMfc0(_instruction instruction) {
+	_regIndex cpu_r = instruction.RegIndex();
+	_regIndex cop_r = instruction.RegInd15();
+
+	uint32_t v;
+	switch (cop_r.m_index) {
+	case 12:
+		v = StatReg;
+		break;
+	case 13:
+		std::cout << "Unhandled_read_from_CAUSE_register" << std::endl;
+		break;
+	default:
+		std::cout << "Unhandled_read_from_cop0r" << cop_r.m_index << std::endl;
+		break;
+	};
+	d_regData= _registerData(cpu_r, v);
+};
+
+void _cpu::OpAnd(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	uint32_t v = Reg(s) & Reg(t);
+	SetReg(d,v);
+};
+
+void _cpu::OpAdd(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	int32_t s_int = (int32_t)Reg(s);
+	int32_t t_int = (int32_t)Reg(t);
+	uint32_t v = (uint32_t)CheckedAdd(s_int, t_int);
+
+	SetReg(d, v);
+
+};
+

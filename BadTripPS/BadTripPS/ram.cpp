@@ -21,3 +21,11 @@ void _ram::Store32(uint32_t offset, uint32_t val) {
 	m_data[offset + 3] = b3;
 };
 
+void _ram::Store8(uint32_t offset, uint8_t val) {
+	m_data[offset] = val;
+};
+
+uint8_t _ram::Load8(uint32_t offset) {
+	return m_data[offset];
+};
+

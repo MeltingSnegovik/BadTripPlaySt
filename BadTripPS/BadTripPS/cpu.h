@@ -117,6 +117,12 @@ struct _cpu
 		void OpLb(_instruction instruction);
 		// Branch if equal
 		void OpBeq(_instruction instruction);
+		// Move From Coprocessor 0
+		void OpMfc0(_instruction instruction);
+		// Bitwise And
+		void OpAnd(_instruction instruction);
+		// Add and generate an exception on overflowing
+		void OpAdd(_instruction instruction);
 };
  
-	
+
