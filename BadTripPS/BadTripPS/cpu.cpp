@@ -4,7 +4,7 @@
 #include "cpu.h"
 
 
-uint32_t _cpu:: WrappIntAdd(uint32_t pc, uint32_t incr) {
+uint32_t _cpu:: WrappIntAdd(ufint32_t pc, uint32_t incr) {
 	if ((pc + incr) > 0xffffffff)
 		return (uint32_t)(pc + incr);
 	else
@@ -163,8 +163,14 @@ void _cpu::OpOr(_instruction instruction) {
 
 void _cpu::OpCop0(_instruction instruction) {
 	switch (instruction.CopOpCode()) {
+	case 0b00000:
+		this->OpMfc0(instruction);
+		break;
 	case 0b00100:
 		this->OpMtc0(instruction);
+		break;
+	case 0b10000:
+		this->OpRfe(instruction);
 		break;
 	default:
 		std::cout << "error in OpCop0" << std::endl;
@@ -349,7 +355,11 @@ void _cpu::OpMfc0(_instruction instruction) {
 		v = StatReg;
 		break;
 	case 13:
-		std::cout << "Unhandled_read_from_CAUSE_register" << std::endl;
+		v = d_cause;
+//		std::cout << "Unhandled_read_from_CAUSE_register" << std::endl;
+		break;
+	case 14:
+		v = d_epc;
 		break;
 	default:
 		std::cout << "Unhandled_read_from_cop0r" << cop_r.m_index << std::endl;
@@ -380,3 +390,217 @@ void _cpu::OpAdd(_instruction instruction) {
 
 };
 
+void _cpu::OpBgtz(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex s = instruction.s();
+	uint32_t v = Reg(s);
+	
+	if (v > 0) {
+		Branch(i);	
+	}
+};
+
+void _cpu::OpBlez(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex s = instruction.s();
+	
+	int32_t v =(int32_t)Reg(s);
+	if (v<=0){
+		Branch(i);		
+	}
+};
+
+void _cpu::OpLbu(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+	
+	uint32_t addr = WrappIntAdd(Reg(s),i);
+	uint8_t v = Load8(addr);
+	d_regData = _registerData(t,(uint32_t)v);
+};
+
+void _cpu::OpJalr(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	_regIndex s = instruction.s();
+	
+	uint32_t ra=pc;
+	SetReg(d,ra);
+	pc=Reg(s);
+};
+
+void _cpu::OpBxx(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex s = instruction.s();
+	
+	uint32_t d_instr = instruction_c.data;
+	
+	uint32_t is_bgez = (d_instr >> 16) & 1;
+	uint32_t is_link = (d_instr >> 17) & 0xf; //==8 tbd
+	
+	int32_t v = (int32_t)Reg(s);
+	uint32_t test;
+	if (v<0)
+		test = 1;
+	else
+		test = 0;
+	
+	uint32_t ra;
+	_regIndex RegInd(31);
+	test = test^is_bgez;
+	if (is_link){
+		ra=pc;
+		SetReg(RegInd,ra);
+	}
+	
+	if (test!=0){
+		Branch(i);
+	}
+};
+
+void _cpu::OpSlti(_instruction instruction) {
+	int32_t i =(int32_t)instruction.SignExt();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+	
+	uint32_t v;
+	if ((int32_t)Reg(s) < i)
+		v=1;
+	else 
+		v=0;
+	SetReg(t,(uint32_t)v);
+};
+
+void _cpu::OpSubu(_instruction instruction) {
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+	_regIndex d = instruction.RegInd15();
+	
+	uint32_t v = WrappIntAdd(Reg(s),Reg(t));
+	SetReg(d,v);
+};
+
+void _cpu::OpSra(_instruction instruction) {
+	uint32_t i = instruction.Shift();
+	_regIndex t = instruction.RegIndex();
+	_regIndex d = instruction.RegInd15();
+	
+	int32_t v = (int32_t)Reg(t)>>i;
+	SetReg(d,(uint32_t)v);
+};
+
+void _cpu::OpDiv(_instruction instruction) {
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+	
+	int32_t n = (int32_t)Reg(s);
+	int32_t d = (int32_t)Reg(t);
+	
+	if (d==0) {
+		d_hi=(uint32_t)n;
+		
+		if (n>=0)
+			d_lo=0xffffffff;
+		else
+			d_lo=1;
+	}
+	else if ((uint32_t)n==0x80000000 && d==-1) {
+		d_hi=0;
+		d_lo=0x80000000;
+	}
+	else {
+		d_hi=(uint32_t) n%d;
+		d_lo=(uint32_t) n/d;
+	}
+};
+
+void _cpu::OpMflo(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	SetReg(d, d_lo);
+};
+
+void _cpu::OpSrl(_instruction instruction) {
+	uint32_t i = instruction.Shift();
+	_regIndex t = instruction.RegIndex();
+	_regIndex d = instruction.RegInd15();
+	
+	uint32_t v = Reg(t)>> i;
+	SetReg(d,v);
+};
+
+void _cpu::OpSltiu(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+	
+	uint32_t v= (uint32_t)(Reg(s)<i);	
+	SetReg(t,v);
+};
+
+void _cpu::OpDivu(_instruction instruction) {
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+	
+	uint32_t n = Reg(s);
+	uint32_t d = Reg(t);
+	
+	if (d==0){
+		d_hi = n;
+		d_lo = 0xffffffff;
+	}
+	else {
+		d_hi = n%d;
+		d_lo = n/d;
+	}
+};
+
+void _cpu::OpMvhi(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	SetReg(d, d_hi);
+};
+
+void _cpu::OpSlt(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	int32_t t_s = (int32_t)Reg(s);
+	int32_t t_t = (int32_t)Reg(t);
+
+	uint32_t v = (uint32_t)(t_s < t_t);
+	SetReg(d, v);
+};
+
+void _cpu::Exception(_exception cause) {
+	uint32_t handl;
+	if (StatReg & (1 << 22) != 0)
+		handl = 0xbfc00180;
+	else
+		handl = 0x80000080;
+	auto mode = StatReg & 0x3f;
+	StatReg &= 0x3f;
+	StatReg |= (mode << 2) & 0x3f;
+
+	d_cause = d_cause << 2;
+	d_epc = current_pc;
+	pc = handl;
+	next_pc = WrappIntAdd(pc, 4);
+};
+
+void _cpu::OpSysCall(_instruction instruction) {
+	Exception(SYSCALL);
+};
+
+void _cpu::OpMtlo(_instruction instruction) {
+	_regIndex s = instruction.s();
+	d_lo = Reg(s);
+};
+
+void _cpu::OpMthi(_instruction instruction) {
+	_regIndex s = instruction.s();
+	d_hi = Reg(s);
+};
+
+void _cpu::OpRfe(_instruction instruction) {
+	if (instruction.data & 0x3f != 0b010000
+}

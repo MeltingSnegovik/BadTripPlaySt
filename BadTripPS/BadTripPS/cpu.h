@@ -30,6 +30,8 @@ public:
 struct _cpu
 {
 	private:
+
+	
 	struct _registerData
 	{
 		_regIndex	d_regIndex;
@@ -40,14 +42,25 @@ struct _cpu
 		{};
 	};
 	public:
+		enum _exception {
+			SYSCALL = 0x8
+		};
+
+
+		uint32_t init_pc;
 		uint32_t pc;
 		uint32_t next_pc;
+
 		uint32_t current_pc;
+
+		uint32_t d_cause;
+		uint32_t d_epc;
+
 		uint32_t regs_c[32];
 		uint32_t out_regs[32];
 
-		uint32_t hi;
-		uint32_t lo;
+		uint32_t d_hi;
+		uint32_t d_lo;
 		/*
 		some non-standart definition
 		tbd
@@ -64,13 +77,18 @@ struct _cpu
 		//like a load in CPU
 		_registerData d_regData;
 		
-		_cpu(_interconnect inter):
-			pc(BEGIN_BIOS),
+		_cpu(_interconnect inter) :
+			init_pc(BEGIN_BIOS),
+			instruction_c(_instruction(Load32(pc))),// tbd
+			current_pc(pc),
+//	pc(BEGIN_BIOS),
+			next_pc(WrappIntAdd(init_pc,4)),
 			interconnect_c(inter),
-			instruction_c(32),							// tbd
 			next_instruction(0x0),
 			StatReg(0),
-			d_regData(_regIndex(0x0),0x0)
+			d_regData(_regIndex(0x0),0x0),
+			d_hi(0xdeadbeef),
+			d_lo(0xdeadbeef)
 			{
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
@@ -123,6 +141,46 @@ struct _cpu
 		void OpAnd(_instruction instruction);
 		// Add and generate an exception on overflowing
 		void OpAdd(_instruction instruction);
+		//Branch if Great Rhen Zero
+		void OpBgtz(_instruction instruction);
+		//Branch if Less than or Equal to Zero 
+		void OpBlez(_instruction instruction);
+		//Load Byte Unsigned
+		void OpLbu(_instruction instruction);
+		//Jump And Link Register
+		void OpJalr(_instruction instruction);
+		//various branch instruction BGEZ, BLTX, BGEZAL, BLTZAL
+		void OpBxx(_instruction instruction);
+		//Set if Less Than Immediate (signes)
+		void OpSlti(_instruction instruction);
+		//Substract Unsigned
+		void OpSubu(_instruction instruction);
+		//Shift Right Arithmetic
+		void OpSra(_instruction instruction);
+		// Divide
+		void OpDiv(_instruction instruction);
+		// Move from LO
+		void OpMflo(_instruction instruction);
+		// shift Right 
+		void OpSrl(_instruction instruction);
+		//Set if less than Immediate Unsigned
+		void OpSltiu(_instruction instruction);
+		//Divide Unsigned
+		void OpDivu(_instruction instruction);
+		// Move from Hi
+		void OpMvhi(_instruction instruction);
+		// Set on Less Than
+		void OpSlt(_instruction instruction);
+		// Trigger as exception
+		void Exception(_exception cause);
+		//System Call
+		void OpSysCall(_instruction instruction);
+		//Move to LO
+		void OpMtlo(_instruction instruction);
+		//Move to HI
+		void OpMthi(_instruction instruction);
+		//Return from Exception
+		void OpRfe(_instruction instruction);
 };
  
 

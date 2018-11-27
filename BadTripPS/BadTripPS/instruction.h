@@ -10,6 +10,7 @@ public:
 		data(t_data)
 	{};
 	uint32_t data;
+	
 	// like a funtion
 	uint32_t Function();
 

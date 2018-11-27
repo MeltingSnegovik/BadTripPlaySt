@@ -15,12 +15,11 @@ public:
 	_ram ram;
 
 	_interconnect(_bios bios) :
-		Bios(bios),
-		MemControll(0x1f801000,36)
+		Bios(bios)
+//		MemControll(0x1f801000,36)
 	{
 	};
 
-	uint32_t load32(uint32_t addr);
 	void Store32(uint32_t addr, uint32_t val);
 	uint32_t Load32(uint32_t addr);
 	void Store16(uint32_t addr, uint16_t val);
