@@ -38,4 +38,7 @@ public:
 	// like a immjump
 	uint32_t ImmJump();
 
+	//Return register index in bits [25;21]
+	_regIndex s();
+
 };

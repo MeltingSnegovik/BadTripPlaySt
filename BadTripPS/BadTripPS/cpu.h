@@ -43,7 +43,10 @@ struct _cpu
 	};
 	public:
 		enum _exception {
-			SYSCALL = 0x8
+			e_SYSCALL = 0x8,
+			e_OVERFLOW= 0xc,
+			e_LOADADDRESSERROR = 0x4,
+			e_STOREADDRESSERROR = 0x5
 		};
 
 
@@ -68,9 +71,11 @@ struct _cpu
 
 		// sr cop0 StatusRegister
 		uint32_t StatReg; 
-		bool branch;
-		bool delay_slot;
+
+		bool d_branch;
+		bool d_delay_slot;
 		bool debugonbreak;
+
 		_instruction instruction_c;
 		_instruction next_instruction;
 		_interconnect interconnect_c;
@@ -81,14 +86,18 @@ struct _cpu
 			init_pc(BEGIN_BIOS),
 			instruction_c(_instruction(Load32(pc))),// tbd
 			current_pc(pc),
-//	pc(BEGIN_BIOS),
-			next_pc(WrappIntAdd(init_pc,4)),
+			//	pc(BEGIN_BIOS),
+			next_pc(WrappIntAdd(init_pc, 4)),
 			interconnect_c(inter),
 			next_instruction(0x0),
 			StatReg(0),
-			d_regData(_regIndex(0x0),0x0),
+			d_regData(_regIndex(0x0), 0x0),
 			d_hi(0xdeadbeef),
-			d_lo(0xdeadbeef)
+			d_lo(0xdeadbeef),
+
+			d_branch(false),
+			d_delay_slot(false)
+
 			{
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
@@ -181,6 +190,30 @@ struct _cpu
 		void OpMthi(_instruction instruction);
 		//Return from Exception
 		void OpRfe(_instruction instruction);
+
+		//Store 8 tbd
+		//load 16
+		uint16_t Load16(uint32_t addr);
+
+		// Load Halfword Unsigned
+		void OpLhu(_instruction instruction);
+		// Shift Left Logical Variable
+		void OpSlly(_instruction instruction);
+
+		// load Hlfword signed
+		void OpLh(_instruction instruction);
+
+		// Bitwise Not Or
+		void OpNor(_instruction instruction);
+		
+		//Shift Right arithmetic variable 
+		void OpSrav(_instruction instruction);
+
+		//Shift Reight Logical Variable
+		void OpSrlv(_instruction instruction);
+
+		// Multiply Unsigned
+		void OpMultu(_instruction instruction);
 };
  
 

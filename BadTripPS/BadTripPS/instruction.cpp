@@ -47,3 +47,7 @@ uint32_t _instruction::Shift() {
 uint32_t _instruction::ImmJump() {
 	return (data & 0x3ffffff);
 };
+
+_regIndex _instruction::s() {
+	return _regIndex((data >> 21) & 0x1f);
+};

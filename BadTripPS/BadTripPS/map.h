@@ -50,6 +50,7 @@ namespace pscx_memory {
 	_map EXPANSION1(0x1f000000, 512 * 1024);
 	_map IRQCONTROL(0x1f801070, 8);
 	_map TIMERS(0x1f801100, 0x30);
+	_map DMA(0x1f801080, 0x80);
 
 	uint32_t mask_region(uint32_t addr) {
 		size_t index = addr >> 29;

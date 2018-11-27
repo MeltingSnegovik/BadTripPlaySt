@@ -14,4 +14,6 @@ struct _ram {
 	void Store32(uint32_t offset, uint32_t val);
 	void Store8(uint32_t offset, uint8_t val);
 	uint8_t Load8(uint32_t offset);
+	void Store16(uint32_t offset, uint16_t val);
+	uint16_t Load16(uint32_t offset);
 };

@@ -26,9 +26,16 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 	};
 
 	uint32_t ans_irq_contrl = pscx_memory::IRQCONTROL.contains(abs_addr); //tbd
-		if (ans_irq_contrl != (-1)) {
+	if (ans_irq_contrl != (-1)) {
 			std::cout << "IRQ_control: " << ans_irq_contrl <<" "<< value<< std::endl;
-		}
+	};
+
+	uint32_t dma_map_ret = pscx_memory::DMA.contains(abs_addr);
+	if (dma_map_ret != (-1)) {
+		std::cout << "dma_write: " << abs_addr << " " << value << std::endl;
+		return;
+	};
+
 };
 
 uint32_t _interconnect::Load32(uint32_t addr) {
@@ -47,7 +54,11 @@ uint32_t _interconnect::Load32(uint32_t addr) {
 	if (addr % 4 != 0)
 		std::cout << "Unaligned_load32_address: {:08x}" << addr << std::endl;
 
-
+	uint32_t dma_map_ret = pscx_memory::DMA.contains(abs_addr);
+	if (dma_map_ret!=-1) {
+		std::cout << "DMA read: " << abs_addr << std::endl;
+		return 0;
+	};
 };
 
 void _interconnect::Store16(uint32_t addr, uint16_t val) {
@@ -61,6 +72,11 @@ void _interconnect::Store16(uint32_t addr, uint16_t val) {
 	uint32_t timer_map_ret = pscx_memory::TIMERS.contains(abs_addr); //tbd
 	if (SPU.contains(abs_addr) != (-1)) {
 		std::cout << "Unhandled_write_to_timer_register" << timer_map_ret << std::endl;
+		return;
+	}
+	uint32_t ram_mar_ret = pscx_memory::RAM.contains(abs_addr);
+	if (ram_mar_ret != -1) {
+		ram.Store16(ram_mar_ret, val);
 		return;
 	}
 	std::cout << "Unhandled_store16_into_address: " << addr << std::endl;
@@ -107,3 +123,19 @@ uint8_t _interconnect::Load8(uint32_t addr) {
 	};
 	std::cout << "Unhandled_load8_into_address: " << addr << std::endl;
 };
+
+uint16_t _interconnect::Load16(uint32_t addr) {
+	uint32_t abs_addr = pscx_memory::mask_region(addr);
+
+	uint32_t spu_map_ret = pscx_memory::SPU.contains(abs_addr);
+	if (spu_map_ret != (-1)) {
+		std::cout << "Unhandled read from spu: " << abs_addr << std::endl;
+		return 0;
+	};
+
+	uint32_t ram_map_ret = pscx_memory::RAM.contains(abs_addr);
+	if (ram_map_ret != (-1)) {
+		return ram.Load16(ram_map_ret);
+	};
+
+}
