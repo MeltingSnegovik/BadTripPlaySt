@@ -725,3 +725,183 @@ void _cpu::OpMultu(_instruction instruction) {
 	d_lo = (uint32_t)v;
 };
 
+void _cpu::OpXor(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	uint32_t v = Reg(s) ^ Reg(t);
+	SetReg(d, v);
+};
+
+void _cpu::OpBreak(_instruction instruction) {
+	Exception(_exception::e_BREAK);
+};
+
+void _cpu::OpMult(_instruction instruction) {
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	int64_t a = (int64_t)Reg(s);
+	int64_t b = (int64_t)Reg(t);
+
+	uint64_t v = a*b;
+
+	d_hi = (uint32_t)(v >> 32);
+	d_lo = (uint32_t)(v);
+};
+
+void _cpu::OpSub(_instruction instruction) {
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+	_regIndex d = instruction.RegInd15();
+
+	int32_t a = (int32_t)Reg(s);
+	int32_t b = (int32_t)Reg(t);
+
+	int32_t v = CheckedSub(a, b); //tbd
+
+	if (v != -1) {
+		SetReg(d, v);
+	}
+	else {
+		Exception(_exception::e_OVERFLOW);
+	}
+};
+
+
+void _cpu::OpXori(_instruction instruction) {
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+	uint32_t i = instruction.ImmValue();
+
+	uint32_t v = Reg(s) ^ i;
+
+	SetReg(t, v);
+};
+
+void _cpu::OpCop1(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+
+void _cpu::OpCop3(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+
+void _cpu::OpLwl(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex s = instruction.s();
+	_regIndex t = instruction.RegIndex();
+
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	uint32_t cur_v = out_regs[t.m_index];
+
+	uint32_t al_addr = addr & !3;
+	uint32_t al_word = this->Load32(al_addr);
+
+	uint32_t v;
+	switch (addr & 3) {
+	case 0:
+		v = (cur_v & 0x00ffffff) | (al_word << 24);
+		break;
+	case 1:
+		v = (cur_v & 0x0000ffff) | (al_word << 16);
+		break;
+	case 2:
+		v = (cur_v & 0x000000ff) | (al_word << 8);
+		break;
+	case 3:
+		v = (cur_v & 0x00ffffff) | (al_word << 0);
+		break;
+	};
+
+	d_regData = _registerData(t, v);
+
+};
+
+void _cpu::OpLwr(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	uint32_t cur_v = out_regs[t.m_index];
+
+	uint32_t al_addr = addr & !3;
+	uint32_t al_word = Load32(al_addr);
+
+	uint32_t v;
+	switch (addr & 3) {
+	case 0:
+		v = (cur_v & 0x00000000) | (al_word >> 0);
+		break;
+	case 1:
+		v = (cur_v & 0xff000000) | (al_word >> 8);
+		break;
+	case 2:
+		v = (cur_v & 0xffff0000) | (al_word >> 16);
+		break;
+	case 3:
+		v = (cur_v & 0xffffff00) | (al_word >> 24);
+		break;
+	}
+	d_regData = _registerData(t, v);
+};
+
+void _cpu::OpSwl(_instruction instruction) {  
+	uint32_t i = instruction.SignExt();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	uint32_t v = Reg(t);
+	uint32_t al_addr = addr& !3;
+
+	uint32_t cur_mem = Load32(al_addr);
+	uint32_t mem;	//kek
+	switch (addr & 3) {
+	case 0:
+		mem = (cur_mem & 0xffffff00) | (v >> 24);
+		break;
+	case 1:
+		mem = (cur_mem & 0xffff0000) | (v >> 16);
+		break;
+	case 2:
+		mem = (cur_mem & 0xff000000) | (v >> 8);
+		break;
+	case 3:
+		mem = (cur_mem & 0x00000000) | (v >> 0);
+		break;
+	};
+	Store32(al_addr, mem);
+};
+
+
+
+void _cpu::OpSwr(_instruction instruction) {
+	uint32_t i = instruction.SignExt();
+	_regIndex t = instruction.RegIndex();
+	_regIndex s = instruction.s();
+
+	uint32_t addr = WrappIntAdd(Reg(s), i);
+	uint32_t v = Reg(t);
+	uint32_t al_addr = addr& !3;
+
+	uint32_t cur_mem = Load32(al_addr);
+	uint32_t mem;	//kek
+	switch (addr & 3) {
+	case 0:
+		mem = (cur_mem & 0x00000000) | (v << 0);
+		break;
+	case 1:
+		mem = (cur_mem & 0x000000ff) | (v << 8);
+		break;
+	case 2:
+		mem = (cur_mem & 0x0000ffff) | (v << 16);
+		break;
+	case 3:
+		mem = (cur_mem & 0x00ffffff) | (v << 24);
+		break;
+	};
+	Store32(al_addr, mem);
+};

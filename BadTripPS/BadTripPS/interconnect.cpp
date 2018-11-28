@@ -36,6 +36,11 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 		return;
 	};
 
+	uint32_t gpu_map_ret = pscx_memory::GPU.contains(abs_addr);
+	if (gpu_map_ret != (-1)) {
+		std::cout << "GPU_WRITE" << gpu_map_ret << " " << value << std::endl;
+		return;
+	};
 };
 
 uint32_t _interconnect::Load32(uint32_t addr) {
@@ -59,6 +64,20 @@ uint32_t _interconnect::Load32(uint32_t addr) {
 		std::cout << "DMA read: " << abs_addr << std::endl;
 		return 0;
 	};
+
+	uint32_t gpu_map_ret = pscx_memory::GPU.contains(abs_addr);
+	if (gpu_map_ret != -1) {
+		std::cout << "gpu read: " << gpu_map_ret << std::endl;
+		switch (gpu_map_ret) {
+		case 4:
+			return 0x10000000;
+		default:
+			return 0;
+		};
+		return 0;
+	};
+
+	std::cout << "Unhandled_load32_address: {:08x}" << addr << std::endl;
 };
 
 void _interconnect::Store16(uint32_t addr, uint16_t val) {
@@ -77,6 +96,18 @@ void _interconnect::Store16(uint32_t addr, uint16_t val) {
 	uint32_t ram_mar_ret = pscx_memory::RAM.contains(abs_addr);
 	if (ram_mar_ret != -1) {
 		ram.Store16(ram_mar_ret, val);
+		return;
+	}
+	
+	uint32_t irq_mar_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
+	if (irq_mar_ret != -1) {
+		std::cout << "IRQ controll write" << irq_mar_ret << " "<< val << std::endl;
+		return;
+	}
+
+	uint32_t tm_mar_ret = pscx_memory::TIMERS.contains(abs_addr);
+	if (tm_mar_ret != -1) {
+		std::cout << "Unhandled write to timer" << tm_mar_ret << " " << val << std::endl;
 		return;
 	}
 	std::cout << "Unhandled_store16_into_address: " << addr << std::endl;
@@ -138,4 +169,9 @@ uint16_t _interconnect::Load16(uint32_t addr) {
 		return ram.Load16(ram_map_ret);
 	};
 
+	uint32_t irq_map_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
+	if (irq_map_ret != (-1)) {
+		std::cout << "IRQ control" << irq_map_ret << std::endl;
+		return 0;
+	};
 }

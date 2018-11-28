@@ -46,7 +46,9 @@ struct _cpu
 			e_SYSCALL = 0x8,
 			e_OVERFLOW= 0xc,
 			e_LOADADDRESSERROR = 0x4,
-			e_STOREADDRESSERROR = 0x5
+			e_STOREADDRESSERROR = 0x5,
+			e_BREAK = 0x9,
+			e_COPROCESSORERROR = 0xb
 		};
 
 
@@ -214,6 +216,39 @@ struct _cpu
 
 		// Multiply Unsigned
 		void OpMultu(_instruction instruction);
+
+		// Bitwise Exclusive Or
+		void OpXor(_instruction instruction);
+
+		// Break
+		void OpBreak(_instruction instruction);
+								  
+		//Multiply signed
+		void OpMult(_instruction instruction);
+
+		//Substract and check for signed overflow
+		void OpSub(_instruction instruction);
+
+		//Bitwise Exckusive or immediate
+		void OpXori(_instruction instruction);
+
+		// Coprocessor 1 opcode
+		void OpCop1(_instruction instruction);
+
+		// Coprocessor 3 opcode
+		void OpCop3(_instruction instruction);
+
+		// Load word left
+		void OpLwl(_instruction instruction);
+
+		// Load word right
+		void OpLwr(_instruction instruction);
+
+		//Store Word Left
+		void OpSwl(_instruction instruction);
+
+		//Store Word Right
+		void OpSwr(_instruction instruction);
 };
  
 
