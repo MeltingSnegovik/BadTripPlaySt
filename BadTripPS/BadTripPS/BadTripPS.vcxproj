@@ -23,6 +23,7 @@
     <ClInclude Include="channel.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="dma.h" />
+    <ClInclude Include="gpu.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="interconnect.h" />
     <ClInclude Include="map.h" />
@@ -34,6 +35,7 @@
     <ClCompile Include="channel.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="dma.cpp" />
+    <ClCompile Include="gpu.cpp" />
     <ClCompile Include="instruction.cpp" />
     <ClCompile Include="interconnect.cpp" />
     <ClCompile Include="map.cpp" />

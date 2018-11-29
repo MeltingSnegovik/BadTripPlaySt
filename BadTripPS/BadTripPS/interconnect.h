@@ -32,5 +32,6 @@ public:
 	uint32_t DmaReg(uint32_t offset);
 	void DoDma(_port port);
 	void DoDmaBlck(_port port);
+	void DoDmaLinkedList(_port port);
 };
 	

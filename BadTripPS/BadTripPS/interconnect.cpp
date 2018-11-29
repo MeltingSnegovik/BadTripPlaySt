@@ -323,7 +323,15 @@ void _interconnect::DoDmaBlck(_port port) {
 
 		switch (c_channel.Direction()) {
 		case _channel::_direction::e_FromRam:
-			std::cout << "Unhandled DMA direction" << std::endl;
+			uint32_t src_word= ram.Load32(cur_addr);
+			switch (port) {
+			case _port::e_Gpu:
+				std::cout << "gpu data " << src_word << std::endl;
+				break;
+			default:
+				std::cout << "Unhandled DMA dest port " << port << std::endl;
+				break;
+			};
 			break;
 		case _channel::_direction::e_ToRam:
 			uint32_t src_word;
@@ -353,12 +361,42 @@ void _interconnect::DoDmaBlck(_port port) {
 void _interconnect::DoDma(_port port) {
 	switch (d_DMA.Channel(port).d_Sync) {
 	case _channel::_sync::e_LinkedList:
-		std::cout << "Linked List mode unsup" << std::endl;
+		DoDmaLinkedList(port);
 		break;
 	default:
 		DoDmaBlck(port);
 		break;
 	};
+};
+
+void _interconnect::DoDmaLinkedList(_port port) {
+	_channel c_channel = d_DMA.Channel(port);
+	uint32_t addr = c_channel.Base() & 0x1ffffc;
+
+	if (c_channel.Direction() == _channel::_direction::e_ToRam) {
+		std::cout << "invalid DMA direction for linked list mode" << std::endl;
+	};
+
+	if (port != _port::e_Gpu) {
+		std::cout << "attemp linked list dma on port" << std::endl;
+	};
+
+	while (true) {
+
+		uint32_t header = ram.Load32(addr);
+		uint32_t remsz = header >> 24;
+		while (remsz > 0) {
+			addr = (addr + 4) & 0x1ffffc;
+			uint32_t command = ram.Load32(addr);
+			std::cout << "GPU command "<< command << std::endl;
+			remsz--;
+		};
+	if (header & 0x800000 != 0){
+		break;
+		}
+	addr = header & 0x800000;
+	};
+	c_channel.Done();
 };
 
 
