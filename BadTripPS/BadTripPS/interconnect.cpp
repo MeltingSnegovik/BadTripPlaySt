@@ -2,6 +2,7 @@
 #include <iostream>
 #include "interconnect.h"
 #include "map.h"
+#include "channel.h"
 
 using namespace pscx_memory;
 
@@ -32,6 +33,7 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 
 	uint32_t dma_map_ret = pscx_memory::DMA.contains(abs_addr);
 	if (dma_map_ret != (-1)) {
+		SetDmaReg(dma_map_ret, value);
 		std::cout << "dma_write: " << abs_addr << " " << value << std::endl;
 		return;
 	};
@@ -70,9 +72,11 @@ uint32_t _interconnect::Load32(uint32_t addr) {
 		std::cout << "gpu read: " << gpu_map_ret << std::endl;
 		switch (gpu_map_ret) {
 		case 4:
-			return 0x10000000;
+			return 0x1c000000;
+			break;
 		default:
 			return 0;
+			break;
 		};
 		return 0;
 	};
@@ -174,4 +178,189 @@ uint16_t _interconnect::Load16(uint32_t addr) {
 		std::cout << "IRQ control" << irq_map_ret << std::endl;
 		return 0;
 	};
-}
+};
+/*
+uint32_t _interconnect::DmaReg(uint32_t offset) {
+	switch (offset) {
+	case 0x70:
+		d_DMA.Control();
+		break;
+	default:
+		std::cout << "unhandled DMA access" << std::endl;
+		break;
+	};
+};
+*/
+
+uint32_t _interconnect::DmaReg(uint32_t offset) {
+	uint32_t major = (offset & 0x70) >> 4;
+	uint32_t minor = (offset & 0xf);
+
+	_channel channel;
+
+	switch (major) {
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+		channel = d_DMA.Channel(pscx_memory::FromIndex(major));
+		switch (minor) {
+		case 8:
+			channel.Control();
+			break;
+		default:
+			std::cout << "Unhandled DMA read at: " << offset << std::endl;
+			break;
+		};
+		break;
+	case 7:
+		switch (minor) {
+		case 0:
+			d_DMA.Control();
+			break;
+		case 4:
+			break;
+			d_DMA.Interrupt();
+		default:
+			std::cout << "Unhandled DMA read at: " << offset << std::endl;
+			break;
+		};
+		break;
+	default:
+		std::cout << "Unhandled DMA read at: "<< offset << std::endl;
+		break;
+	};
+};
+
+void _interconnect::SetDmaReg(uint32_t offset, uint32_t val) {
+	uint32_t major = (offset & 0x70) >> 4;
+	uint32_t minor = (offset & 0xf);
+
+	_channel c_channel;
+	_port c_port;
+	_port c_act_port;
+	switch (major) {
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+		c_port = pscx_memory::FromIndex(major);
+		c_channel = d_DMA.Channel(c_port);
+		switch (minor) {
+		case 0:
+			c_channel.SetBase(val);
+			break;
+		case 4:
+			c_channel.SetBlCntr(val);
+			break;
+		case 8:
+			c_channel.SetControl(val);
+			break;
+		default:
+			std::cout << "Unhandled DMA write at: " << offset <<" "<< val << std::endl;
+			break;
+		};
+		if (c_channel.Active()) {
+			c_act_port = c_port;
+		}
+		else {
+			
+		};
+		break;
+	case 7:
+		switch (minor) {
+		case 0:
+			d_DMA.SetControl(val);
+			break;
+		case 4:
+			d_DMA.SetInterrupt(val);
+			break;
+		default:
+			std::cout << "Unhandled DMA write at: " << offset << " " << val << std::endl;
+			break;
+		};
+	default:
+		std::cout << "Unhandled DMA write at: " << offset << " " << val << std::endl;
+		break;
+	};
+
+	//tbd if let Some(port) = active_port
+	if (c_act_port!=-1) {
+		DoDma(c_port);
+	}
+};
+
+void _interconnect::DoDmaBlck(_port port) {
+	_channel c_channel = d_DMA.Channel(port);
+
+	uint32_t c_incr;
+	switch (c_channel.d_Step) {
+	case _channel::_step::e_Incr:
+		c_incr = 4;
+		break;
+	case _channel::_step::e_Dec:
+		c_incr = -4;
+		break;
+	};
+
+	uint32_t addr = c_channel.Base();
+	uint32_t remsz;
+	if (c_channel.TransferSize()!=-1) {
+		remsz = c_channel.TransferSize();
+	}
+	else {
+		std::cout << "couldn't figure out DMA block transfer size" << std::endl;
+	};
+
+	while (remsz > 0) {
+		uint32_t cur_addr = addr & 0x1ffffc;
+
+		switch (c_channel.Direction()) {
+		case _channel::_direction::e_FromRam:
+			std::cout << "Unhandled DMA direction" << std::endl;
+			break;
+		case _channel::_direction::e_ToRam:
+			uint32_t src_word;
+			switch (port) {
+			case _port::e_Otc:
+				switch (remsz) {
+				case 1:
+					src_word = 0xffffff;
+					break;
+				default:
+					src_word = WrappIntSub(addr, 4) & 0x1fffff;
+					break;
+				};
+				break;
+			default:
+				ram.Store32(cur_addr, src_word);
+				break;
+			};
+		};
+		addr = WrappIntAdd(addr, c_incr);
+		remsz--;
+	};
+	c_channel.Done();
+};
+
+//dma.channel.sync
+void _interconnect::DoDma(_port port) {
+	switch (d_DMA.Channel(port).d_Sync) {
+	case _channel::_sync::e_LinkedList:
+		std::cout << "Linked List mode unsup" << std::endl;
+		break;
+	default:
+		DoDmaBlck(port);
+		break;
+	};
+};
+
+
+
+

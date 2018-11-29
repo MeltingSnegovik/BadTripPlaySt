@@ -38,6 +38,23 @@ const uint32_t REGION_MASK[8] = {
 	0xfffffff, 0xfffffff 
 };
 
+enum _port {
+	//Macroblock decoder input
+	e_MdecIn = 0,
+	//Macroblock decoder output
+	e_MdecOut = 1,
+	//Graphics Processing Unit
+	e_Gpu = 2,
+	//Cd-rom drive
+	e_CdRom = 3,
+	//Sound processing Unit
+	e_Spu = 4,
+	//Extension Port		
+	e_Pio = 5,
+	//used to clear the ordering table
+	e_Otc = 6
+};
+
 namespace pscx_memory {
 	_map CACHECONTROLL(0xfffe0130, 4);
 	_map BIOS(0x1fc00000, 512 * 1024);
@@ -55,5 +72,33 @@ namespace pscx_memory {
 	uint32_t mask_region(uint32_t addr) {
 		size_t index = addr >> 29;
 		return addr & REGION_MASK[index];
+	};
+
+	_port FromIndex(uint32_t index) {
+		switch (index) {
+		case 0:
+			return _port::e_MdecIn;
+			break;
+		case 1:
+			return _port::e_MdecOut;
+			break;
+		case 2:
+			return _port::e_Gpu;
+			break;
+		case 3:
+			return _port::e_CdRom;
+			break;
+		case 4:
+			return _port::e_Spu;
+			break;
+		case 5:
+			return _port::e_Pio;
+			break;
+		case 6:
+			return _port::e_Otc;
+			break;
+		default:
+			std::cout << "invalid Port " << index << std::endl;
+		};
 	};
 }

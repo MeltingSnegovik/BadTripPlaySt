@@ -4,6 +4,7 @@
 #include "bios.h"
 #include "map.h"
 #include "ram.h"
+#include "dma.h"
 
 #define START_CASH_DATA 0xbfc00000
 
@@ -13,7 +14,7 @@ public:
 	
 	_bios Bios;
 	_ram ram;
-
+	_dma d_DMA;
 	_interconnect(_bios bios) :
 		Bios(bios)
 //		MemControll(0x1f801000,36)
@@ -26,5 +27,10 @@ public:
 	void Store8(uint32_t addr, uint8_t val);
 	uint8_t Load8(uint32_t addr);
 	uint16_t Load16(uint32_t addr);
+	//DMA register write
+	void SetDmaReg(uint32_t offset, uint32_t val);
+	uint32_t DmaReg(uint32_t offset);
+	void DoDma(_port port);
+	void DoDmaBlck(_port port);
 };
 	

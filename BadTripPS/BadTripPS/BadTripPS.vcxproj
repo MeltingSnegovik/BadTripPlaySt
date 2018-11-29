@@ -20,7 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bios.h" />
+    <ClInclude Include="channel.h" />
     <ClInclude Include="cpu.h" />
+    <ClInclude Include="dma.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="interconnect.h" />
     <ClInclude Include="map.h" />
@@ -29,7 +31,9 @@
   <ItemGroup>
     <ClCompile Include="BadTrip.cpp" />
     <ClCompile Include="bios.cpp" />
+    <ClCompile Include="channel.cpp" />
     <ClCompile Include="cpu.cpp" />
+    <ClCompile Include="dma.cpp" />
     <ClCompile Include="instruction.cpp" />
     <ClCompile Include="interconnect.cpp" />
     <ClCompile Include="map.cpp" />
