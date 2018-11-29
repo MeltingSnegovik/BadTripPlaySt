@@ -48,7 +48,8 @@ struct _cpu
 			e_LOADADDRESSERROR = 0x4,
 			e_STOREADDRESSERROR = 0x5,
 			e_BREAK = 0x9,
-			e_COPROCESSORERROR = 0xb
+			e_COPROCESSORERROR = 0xb,
+			e_ILLEGALINSTRUCTION = 0xa
 		};
 
 
@@ -172,6 +173,8 @@ struct _cpu
 		void OpDiv(_instruction instruction);
 		// Move from LO
 		void OpMflo(_instruction instruction);
+		// Move from HI
+		void OpMfhi(_instruction instruction);
 		// shift Right 
 		void OpSrl(_instruction instruction);
 		//Set if less than Immediate Unsigned
@@ -200,7 +203,7 @@ struct _cpu
 		// Load Halfword Unsigned
 		void OpLhu(_instruction instruction);
 		// Shift Left Logical Variable
-		void OpSlly(_instruction instruction);
+		void OpSllv(_instruction instruction);
 
 		// load Hlfword signed
 		void OpLh(_instruction instruction);
@@ -249,6 +252,33 @@ struct _cpu
 
 		//Store Word Right
 		void OpSwr(_instruction instruction);
+
+		//Load Word in Coprocessor 0
+		void OpLwc0(_instruction instruction);
+
+		//Load Word in Coprocessor 1
+		void OpLwc1(_instruction instruction);
+
+		//Load Word in Coprocessor 2
+		void OpLwc2(_instruction instruction);
+
+		//Load Word in Coprocessor 3
+		void OpLwc3(_instruction instruction);
+
+		//Store word in Coprocessor 0
+		void OpSwc0(_instruction instruction);
+
+		//Store word in Coprocessor 1
+		void OpSwc1(_instruction instruction);
+
+		//Store word in Coprocessor 2
+		void OpSwc2(_instruction instruction);
+
+		//Store word in Coprocessor 3
+		void OpSwc3(_instruction instruction);
+
+		//Illegal instruction
+		void OpIllegal(_instruction instruction);
 };
  
 

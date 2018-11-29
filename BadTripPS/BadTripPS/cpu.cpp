@@ -64,25 +64,211 @@ void _cpu::DecodeAndExecute(_instruction instruction) {
 				case 0b000000:
 					OpSll(instruction);
 					break;
+				case 0b000010:
+					OpSrl(instruction);
+					break;
+				case 0b000011:
+					OpSra(instruction);
+					break;
+				case 0b000100:
+					OpSllv(instruction);
+					break;
+				case 0b000110:
+					OpSrlv(instruction);
+					break;
+				case 0b000111:
+					OpSrav(instruction);
+					break;
+				case 0b001000:
+					OpJr(instruction);
+					break;
+				case 0b001001:
+					OpJalr(instruction);
+					break;
+				case 0b001100:
+					OpSysCall(instruction);
+					break;
+				case 0b001101:
+					OpBreak(instruction);
+					break;
+				case 0b010000:
+					OpMfhi(instruction);
+					break;
+				case 0b010001:
+					OpMthi(instruction);
+					break;
+				case 0b010010:
+					OpMflo(instruction);
+					break;
+				case 0b010011:
+					OpMtlo(instruction);
+					break;
+				case 0b011000:
+					OpMult(instruction);
+					break;
+				case 0b011001:
+					OpMultu(instruction);
+					break;
+				case 0b011010:
+					OpDiv(instruction);
+					break;
+				case 0b011011:
+					OpDivu(instruction);
+					break;
+				case 0b100000:
+					OpAdd(instruction);
+					break;
+				case 0b100001:
+					OpAddu(instruction);
+					break;
+				case 0b100010:
+					OpSub(instruction);
+					break;
+				case 0b100011:
+					OpSubu(instruction);
+					break;
+				case 0b100100:
+					OpAnd(instruction);
+					break;
+				case 0b100101:
+					OpOr(instruction);
+					break;
+				case 0b100110:
+					OpXor(instruction);
+					break;
+				case 0b100111:
+					OpNor(instruction);
+					break;
+				case 0b101010:
+					OpSlt(instruction);
+					break;
+				case 0b101011:
+					OpSltu(instruction);
+					break;
 				default:
-					std::cout << "Unhandled instruction" << std::endl;
+					OpIllegal(instruction); //tbd
 					break;
 			};
 			break;
-		case 0b001111:
-			OpLui(instruction);
+		case 0b000001:
+			OpBxx(instruction);
+			break;
+		case 0b000010:
+			OpJ(instruction);
+			break;
+		case 0b000011:
+			OpJal(instruction);
+			break;
+		case 0b000100:
+			OpBeq(instruction);
+			break;
+		case 0b000101:
+			OpBne(instruction);
+			break;
+		case 0b000110:
+			OpBlez(instruction);
+			break;
+		case 0b000111:
+			OpBgtz(instruction);
+			break;
+		case 0b001000:
+			OpAddi(instruction);
+			break;
+		case 0b001001:
+			OpAddiu(instruction);
+			break;
+		case 0b001010:
+			OpSlti(instruction);
+			break;
+		case 0b001011:
+			OpSltiu(instruction);
+			break;
+		case 0b001100:
+			OpAndi(instruction);
 			break;
 		case 0b001101:
 			OpOri(instruction);
 			break;
-		case 0b101011:
-			OpSw(instruction);
+		case 0b001110:
+			OpXori(instruction);
+			break;
+		case 0b001111:
+			OpLui(instruction);
 			break;
 		case 0b010000:
 			OpCop0(instruction);
 			break;
+		case 0b010001:
+			OpCop1(instruction);
+			break;
+		case 0b010010:
+			OpCop2(instruction);
+			break;
+		case 0b010011:
+			OpCop3(instruction);
+			break;
+		case 0b100000:
+			OpLb(instruction);
+			break;
+		case 0b100001:
+			OpLh(instruction);
+			break;
+		case 0b100010:
+			OpLwl(instruction);
+			break;
+		case 0b100011:
+			OpLw(instruction);
+			break;
+		case 0b100100:
+			OpLbu(instruction);
+			break;
+		case 0b100101:
+			OpLhu(instruction);
+			break;
+		case 0b100110:
+			OpLwr(instruction);
+			break;
+		case 0b101000:
+			OpSb(instruction);
+			break;
+		case 0b101001:
+			OpSh(instruction);
+			break;
+		case 0b101010:
+			OpSwl(instruction);
+			break;
+		case 0b101011:
+			OpSw(instruction);
+			break;
+		case 0b101110:
+			OpSwr(instruction);
+			break;
+		case 0b110000:
+			OpLwc0(instruction);
+			break;
+		case 0b110001:
+			OpLwc1(instruction);
+			break;
+		case 0b110010:
+			OpLwc2(instruction);
+			break;
+		case 0b110011:
+			OpLwc3(instruction);
+			break;
+		case 0b111000:
+			OpSwc0(instruction);
+			break;
+		case 0b111001:
+			OpSwc1(instruction);
+			break;
+		case 0b111010:
+			OpSwc2(instruction);
+			break;
+		case 0b111011:
+			OpSwc3(instruction);
+			break;
 		default:
-			std::cout << "error on DecodeAndExecute" << std::endl;
+			OpIllegal(instruction);
 			break;
 	};
 	// else return error
@@ -549,6 +735,13 @@ void _cpu::OpMflo(_instruction instruction) {
 	SetReg(d, d_lo);
 };
 
+//tbd
+void _cpu::OpMfhi(_instruction instruction) {
+	_regIndex d = instruction.RegInd15();
+//	delayed_load(); 
+	SetReg(d, d_hi);
+};
+
 void _cpu::OpSrl(_instruction instruction) {
 	uint32_t i = instruction.Shift();
 	_regIndex t = instruction.RegIndex();
@@ -668,7 +861,7 @@ void _cpu::OpLhu(_instruction instruction) {
 	};
 };
 
-void _cpu::OpSlly(_instruction instruction) {
+void _cpu::OpSllv(_instruction instruction) {
 	_regIndex d = instruction.RegInd15();
 	_regIndex s = instruction.s();
 	_regIndex t = instruction.RegIndex();
@@ -904,4 +1097,40 @@ void _cpu::OpSwr(_instruction instruction) {
 		break;
 	};
 	Store32(al_addr, mem);
+};
+
+void _cpu::OpLwc0(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+
+void _cpu::OpLwc1(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+
+void _cpu::OpLwc2(_instruction instruction) {
+	std::cout << "unhandled GTE LWC" << instruction.data << std::endl;
+};
+
+void _cpu::OpLwc3(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+
+void _cpu::OpSwc0(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+void _cpu::OpSwc1(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+
+void _cpu::OpSwc2(_instruction instruction) {
+	std::cout << "unhandled GTE SWC" << instruction.data << std::endl;
+};
+
+void _cpu::OpSwc3(_instruction instruction) {
+	Exception(_exception::e_COPROCESSORERROR);
+};
+
+void _cpu::OpIllegal(_instruction instruction) {
+	std::cout << "Illegal instruction" << instruction.data << std::endl;
+	Exception(_exception::e_ILLEGALINSTRUCTION);
 };
