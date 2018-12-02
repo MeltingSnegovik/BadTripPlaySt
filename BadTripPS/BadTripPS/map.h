@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bios.h"
-
+#include <iostream>
 
 
 struct _map
@@ -23,7 +23,19 @@ struct _regIndex
 	_regIndex(uint32_t index) : m_index(index) {};
 };
 
+struct _buffer {
+	uint32_t m_buffer[12];
+	uint8_t m_len;
 
+	_buffer() :
+		m_len(0)
+	{
+		memset(m_buffer, 0, _countof(m_buffer));
+	};
+
+	void Clear();
+	void PushWord(uint32_t word);
+};
 
 
 
@@ -101,4 +113,5 @@ namespace pscx_memory {
 			std::cout << "invalid Port " << index << std::endl;
 		};
 	};
-}
+};
+

@@ -1,6 +1,6 @@
 #pragma once
 #include "map.h"
-
+#include <iostream>
 
 
 namespace pscx_gpu
@@ -39,6 +39,17 @@ namespace pscx_gpu
 			e_GPUTOGP0,
 			e_VRAMTOCPU
 		};	
+
+		enum _commandMeth {
+			e_Gp0Nop,
+			e_Gp0QuadMonoOpaque,
+			e_Gp0DrawMode,
+			e_Gp0TextureWindow,
+			e_Gp0DrawingAreaTopLeft,
+			e_Gp0DrawingAreaBottomRight,
+			e_Gp0DrawingOffset,
+			e_Gp0MaskBitSetting
+		};
 
 		/// Texture page base X coordinate (4 bits, 64 byte increment)
 		uint8_t d_page_base_x;
@@ -82,7 +93,49 @@ namespace pscx_gpu
 		bool d_interrupt;
 		/// DMA request direction
 		_dmaDirection d_dma_direction;
+		// Mirror textured rectangle  along x axis
+		bool d_rectangle_texture_x_flip;
+		// Mirror textured rectangle  along y axis
+		bool d_rectangle_texture_y_flip;
 
+		/// Texture window x mask (8 pixel steps)
+		uint8_t d_texture_window_x_mask;
+		/// Texture window y mask (8 pixel steps)
+		uint8_t d_texture_window_y_mask;
+		/// Texture window x offset (8 pixel steps)
+		uint8_t d_texture_window_x_offset;
+		/// Texture window y offset (8 pixel steps)
+		uint8_t d_texture_window_y_offset;
+		/// Left-most column of drawing area
+		uint16_t d_drawing_area_left;
+		/// Top-most line of drawing area
+		uint16_t d_drawing_area_top;
+		/// Right-most column of drawing area
+		uint16_t d_drawing_area_right;
+		/// Bottom-most line of drawing area
+		uint16_t d_drawing_area_bottom;
+		/// Horizontal drawing offset applied to all vertex
+		int16_t d_drawing_x_offset;
+		/// Vertical drawing offset applied to all vertex
+		int16_t d_drawing_y_offset;
+		/// First column of the display area in VRAM
+		uint16_t d_display_vram_x_start;
+		/// First line of the display area in VRAM
+		uint16_t d_display_vram_y_start;
+		/// Display output horizontal start relative to HSYNC
+		uint16_t d_display_horiz_start;
+		/// Display output horizontal end relative to HSYNC
+		uint16_t d_display_horiz_end;
+		/// Display output first line relative to VSYNC
+		uint16_t d_display_line_start;
+		/// Display output last line relative to VSYNC
+		uint16_t d_display_line_end;
+
+		_buffer Gp0Command;
+
+		uint32_t Gp0CommandRemaining;
+
+		_commandMeth Gp0CommandMethod;
 
 		_gpu() :
 			d_page_base_x(0),
@@ -106,7 +159,24 @@ namespace pscx_gpu
 		{};
 
 		uint32_t Status();
-	};
+		void Gp0(uint32_t val);
+		void Gp0DrawMode(uint32_t val);
+		void Gp1(uint32_t val);
+		void Gp1Reset(uint32_t val);
+		uint32_t Read();
+		void Gp1DisplayMode(uint32_t val);
+		void Gp1DmaDirection(uint32_t val);
+//		void DoDmaLinkedList(_port port);
+		void Gp0DrawingAreaTopLeft(uint32_t val);
+		void Gp0DrawingAreaBottomRight(uint32_t val);
+		void Gp0DrawingOffset(uint32_t val);
+		void Gp0TextureWindow(uint32_t val);
+		void Gp0MaskBitSetting(uint32_t val);
+		void Gp1DisplayVramStart(uint32_t val);
+		void Gp1DisplayHorizontalRange(uint32_t val);
+		void Gp1DisplayVerticalRange(uint32_t val);
+		void Gp0CommandMethodRun(uint32_t par);
+};
 
 	struct _horizontalRes {
 		uint8_t d_data;
@@ -118,5 +188,5 @@ namespace pscx_gpu
 		};
 		uint32_t IntoStat();
 	};
-
 };
+

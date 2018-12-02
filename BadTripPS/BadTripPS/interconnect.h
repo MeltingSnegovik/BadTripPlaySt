@@ -5,6 +5,7 @@
 #include "map.h"
 #include "ram.h"
 #include "dma.h"
+#include "gpu.h"
 
 #define START_CASH_DATA 0xbfc00000
 
@@ -15,6 +16,7 @@ public:
 	_bios Bios;
 	_ram ram;
 	_dma d_DMA;
+	pscx_gpu::_gpu d_gpu;
 	_interconnect(_bios bios) :
 		Bios(bios)
 //		MemControll(0x1f801000,36)
@@ -33,5 +35,6 @@ public:
 	void DoDma(_port port);
 	void DoDmaBlck(_port port);
 	void DoDmaLinkedList(_port port);
+
 };
 	

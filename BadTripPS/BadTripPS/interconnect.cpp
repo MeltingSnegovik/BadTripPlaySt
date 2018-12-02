@@ -4,6 +4,7 @@
 #include "map.h"
 #include "channel.h"
 
+
 using namespace pscx_memory;
 
 void _interconnect::Store32(uint32_t addr, uint32_t value) {
@@ -40,7 +41,14 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 
 	uint32_t gpu_map_ret = pscx_memory::GPU.contains(abs_addr);
 	if (gpu_map_ret != (-1)) {
-		std::cout << "GPU_WRITE" << gpu_map_ret << " " << value << std::endl;
+		switch (gpu_map_ret) {
+		case 0:
+			d_gpu.Gp0(value);
+			break;
+		default:
+			std::cout << "GPU write: " << gpu_map_ret << " " << value << std::endl;
+			break;
+		};
 		return;
 	};
 };
@@ -388,7 +396,7 @@ void _interconnect::DoDmaLinkedList(_port port) {
 		while (remsz > 0) {
 			addr = (addr + 4) & 0x1ffffc;
 			uint32_t command = ram.Load32(addr);
-			std::cout << "GPU command "<< command << std::endl;
+			d_gpu.Gp0(command);
 			remsz--;
 		};
 	if (header & 0x800000 != 0){
