@@ -48,7 +48,16 @@ namespace pscx_gpu
 			e_Gp0DrawingAreaTopLeft,
 			e_Gp0DrawingAreaBottomRight,
 			e_Gp0DrawingOffset,
-			e_Gp0MaskBitSetting
+			e_Gp0MaskBitSetting,
+			e_Gp0ImageLoad,
+			e_Gp0QuadShadedOpaque,
+			e_Gp0TriangleShadedOpaque,
+			e_Gp0QuadTextureBlandOpaque
+		};
+
+		enum _gp0Mode {
+			e_Command,
+			e_ImageLoad
 		};
 
 		/// Texture page base X coordinate (4 bits, 64 byte increment)
@@ -131,11 +140,14 @@ namespace pscx_gpu
 		/// Display output last line relative to VSYNC
 		uint16_t d_display_line_end;
 
-		_buffer Gp0Command;
+		_buffer d_Gp0Command;
 
-		uint32_t Gp0CommandRemaining;
+		uint32_t d_Gp0WordsRemaining;
 
-		_commandMeth Gp0CommandMethod;
+		_commandMeth d_Gp0CommandMethod;
+
+		//current mode of the GP0 register
+		_gp0Mode d_Gp0Mode;
 
 		_gpu() :
 			d_page_base_x(0),
@@ -172,10 +184,21 @@ namespace pscx_gpu
 		void Gp0DrawingOffset(uint32_t val);
 		void Gp0TextureWindow(uint32_t val);
 		void Gp0MaskBitSetting(uint32_t val);
+		void Gp0Nop(uint32_t val);
+		void Gp0QuadMonoOpaque(uint32_t val);
+		void Gp0CommandMethodRun(_commandMeth meth, uint32_t val);
+		void Gp0ClearCache();
+		void Gp0ImageLoad();
+		void Gp0ImageStore();
+		void Gp0QuadShadedOpaque();
+		void Gp0TriangleShadedOpaque();
+		void Gp0QuadTextureBlandOpaque();
 		void Gp1DisplayVramStart(uint32_t val);
 		void Gp1DisplayHorizontalRange(uint32_t val);
 		void Gp1DisplayVerticalRange(uint32_t val);
-		void Gp0CommandMethodRun(uint32_t par);
+		void Gp1DisplayEnable(uint32_t val);
+		void Gp1Acknowledge();
+		void Gp1ResetCommandClear();
 };
 
 	struct _horizontalRes {

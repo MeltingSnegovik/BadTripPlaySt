@@ -28,6 +28,7 @@ uint32_t pscx_gpu::_gpu::Status() {
 	r |= ((uint32_t)d_texture_disable) << 15;
 	r |= d_hres.IntoStat();
 	r |= ((uint32_t)d_vres) << 19;
+	r |= ((uint32_t)d_hres.IntoStat());
 	r |= ((uint32_t)d_vmode) << 20;
 	r |= ((uint32_t)d_display_depth) << 21;
 	r |= ((uint32_t)d_interlaced) << 22;
@@ -62,24 +63,82 @@ uint32_t pscx_gpu::_gpu::Status() {
 
 void pscx_gpu::_gpu::Gp0(uint32_t val) {
 	uint32_t c_len;
-	if (Gp0CommandRemaining == 0) {
+	if (d_Gp0WordsRemaining == 0) {
 		uint32_t opcode = (val >> 24) & 0xff;
+		uint32_t len;
+		_commandMeth meth;
 		switch (opcode) {
-		case 0x00:
-			c_len = 1;
-			Gp0Nop();
-			break;
-		case 0x28:
-			c_len = 5;
-			Gp0QuadMonoOpaque();
-		case 0xe1:
-			Gp0DrawMode(val);
-			break;
-		default:
-			std::cout << "unhandled GP0 command " << val << std::endl;
-			break;
+			case 0x00:
+				len = 1;
+				meth = _commandMeth::e_Gp0Nop;
+				break;
+			case 0xa0:
+				len = 3;
+				meth = _commandMeth::e_Gp0ImageLoad;
+				break;
+			case 0x28:
+				len = 5;
+				meth = _commandMeth::e_Gp0QuadMonoOpaque;
+				break;
+			case 0x2c:
+				len = 9;		
+				meth = _commandMeth::e_Gp0QuadTextureBlandOpaque;
+				break;
+			case 0x30:
+				len = 6;
+				meth = _commandMeth::e_Gp0TriangleShadedOpaque;
+				break;
+			case 0x38:
+				len = 8;
+				meth = _commandMeth::e_Gp0QuadShadedOpaque;
+				break;
+			case 0xe1:
+				len = 1;
+				meth = _commandMeth::e_Gp0DrawMode;
+				break;
+			case 0xe2:
+				len = 1;
+				meth = _commandMeth::e_Gp0TextureWindow;
+				break;
+			case 0xe3:
+				len = 1;
+				meth = _commandMeth::e_Gp0DrawingAreaTopLeft;
+				break;
+			case 0xe4:
+				len = 1;
+				meth = _commandMeth::e_Gp0DrawingAreaBottomRight;
+				break;
+			case 0xe5:
+				len = 1;
+				meth = _commandMeth::e_Gp0DrawingOffset;
+				break;
+			case 0xe6:
+				len = 1;
+				meth = _commandMeth::e_Gp0MaskBitSetting;
+				break;
+			default:
+				std::cout << "Unhandled GP0 command" << val << std::endl;
+				break;
+			};
+		d_Gp0WordsRemaining = len;
+		d_Gp0CommandMethod = meth;
+		d_Gp0Command.Clear();
 		};
+
+	d_Gp0WordsRemaining--;
+	switch (d_Gp0Mode) {
+	case _gp0Mode::e_Command:
+		d_Gp0Command.PushWord(val);
+		if (d_Gp0WordsRemaining == 0)
+			Gp0CommandMethodRun(d_Gp0CommandMethod, val); //tbd ??
+		break;
+	case _gp0Mode::e_ImageLoad:
+		if (d_Gp0WordsRemaining == 0)
+			d_Gp0Mode = _gp0Mode::e_ImageLoad;
+		break;
 	};
+
+
 };
 
 void pscx_gpu::_gpu::Gp0DrawMode(uint32_t val) {
@@ -213,12 +272,11 @@ void pscx_gpu::_gpu::Gp1DmaDirection(uint32_t val) {
 		d_dma_direction = _dmaDirection::e_VRAMTOCPU;
 		break;
 	default:
-		std::cout << "Unreadable" << std::endl;
+		std::cout << "Unreadable Gp1DmaDirection" << std::endl;
 		break;
 	};
 	return;
 };
-
 
 void pscx_gpu::_gpu::Gp0DrawingAreaTopLeft(uint32_t val) {
 	d_drawing_area_top = (uint16_t)((val >> 10) & 0x3ff);
@@ -265,15 +323,87 @@ void pscx_gpu::_gpu::Gp1DisplayVerticalRange(uint32_t val) {
 	d_display_line_end = (uint16_t)((val >> 10) & 0x3ff);
 };
 
-void pscx_gpu::_gpu::Gp0CommandMethodRun(uint32_t par) {
-
-	uint32_t len;
-	_commandMeth meth;
-	switch (Gp0CommandMethod) {
-	case 1:
-		meth = _commandMeth::e_Gp0Nop;
+void pscx_gpu::_gpu::Gp0CommandMethodRun(_commandMeth meth,uint32_t val) {
+	switch (meth) {
+	case _commandMeth::e_Gp0DrawingAreaBottomRight:
+		Gp0DrawingAreaBottomRight(val);
 		break;
-	case 2:
-
+	case _commandMeth::e_Gp0DrawingAreaTopLeft :
+		Gp0DrawingAreaTopLeft(val);
+		break;
+	case _commandMeth::e_Gp0DrawingOffset:
+		Gp0DrawingOffset(val);
+		break;
+	case _commandMeth::e_Gp0DrawMode:
+		Gp0DrawMode(val);
+		break;
+	case _commandMeth::e_Gp0MaskBitSetting:
+		Gp0MaskBitSetting(val);
+		break;
+	case _commandMeth::e_Gp0Nop:
+		Gp0Nop(val);
+		break;
+	case _commandMeth::e_Gp0QuadMonoOpaque:
+		Gp0QuadMonoOpaque(val);
+		break;
+	case _commandMeth::e_Gp0TextureWindow:
+		Gp0TextureWindow(val);
+		break;
 	};
+};
+
+void pscx_gpu::_gpu::Gp0Nop(uint32_t val) {
+	//
+};
+
+void pscx_gpu::_gpu::Gp0QuadMonoOpaque(uint32_t val) {
+	std::cout << "Draw mr Hanky " << val << std::endl;
+};
+
+void pscx_gpu::_gpu::Gp0ClearCache() {
+	//
+};
+
+void pscx_gpu::_gpu::Gp0ImageLoad() {
+	uint32_t res = d_Gp0Command.m_buffer[2];
+	uint32_t width = res & 0xffff;
+	uint32_t height = res >> 16;
+
+	uint32_t imgsize = (width * height+1 &!1); //tbd pg 132
+
+	d_Gp0WordsRemaining = imgsize / 2;
+	d_Gp0Mode = _gp0Mode::e_ImageLoad;
+};
+
+void pscx_gpu::_gpu::Gp1DisplayEnable(uint32_t val) {
+	d_display_disabled = (val & 1 != 0);
+};
+
+void pscx_gpu::_gpu::Gp0ImageStore() {
+	uint32_t res = d_Gp0Command.m_buffer[2];
+	uint32_t width = res & 0xffff;
+	uint32_t height = res >> 16;
+	std::cout << "Unhandled IMage Store " << width << " " << height << std::endl;
+};
+
+void pscx_gpu::_gpu::Gp0QuadShadedOpaque() {
+	std::cout << "Gp0QuadShadedOpaque" << std::endl;
+};
+
+void pscx_gpu::_gpu::Gp0TriangleShadedOpaque() {
+	std::cout << "pscx_gpu::_gpu::Gp0TriangleShadedOpaque" << std::endl;
+};
+
+void pscx_gpu::_gpu::Gp0QuadTextureBlandOpaque() {
+	std::cout << "Gp0QuadTextureBlandOpaque" << std::endl;
+};
+
+void pscx_gpu::_gpu::Gp1Acknowledge() {
+	d_interrupt = false;
+};
+
+void pscx_gpu::_gpu::Gp1ResetCommandClear() {
+	d_Gp0Command.Clear();
+	d_Gp0WordsRemaining = 0;
+	d_Gp0Mode = _gp0Mode::e_Command;
 };

@@ -334,7 +334,7 @@ void _interconnect::DoDmaBlck(_port port) {
 			uint32_t src_word= ram.Load32(cur_addr);
 			switch (port) {
 			case _port::e_Gpu:
-				std::cout << "gpu data " << src_word << std::endl;
+				d_gpu.Gp0(src_word);
 				break;
 			default:
 				std::cout << "Unhandled DMA dest port " << port << std::endl;
