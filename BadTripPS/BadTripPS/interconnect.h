@@ -1,8 +1,6 @@
 #pragma once
 
 #include <vector>
-#include "bios.h"
-#include "map.h"
 #include "ram.h"
 #include "dma.h"
 #include "gpu.h"
@@ -32,9 +30,9 @@ public:
 	//DMA register write
 	void SetDmaReg(uint32_t offset, uint32_t val);
 	uint32_t DmaReg(uint32_t offset);
-	void DoDma(_port port);
-	void DoDmaBlck(_port port);
-	void DoDmaLinkedList(_port port);
+	void DoDma(pscx_memory::_port port);
+	void DoDmaBlck(pscx_memory::_port port);
+	void DoDmaLinkedList(pscx_memory::_port port);
 
 };
 	

@@ -34,7 +34,7 @@ void _dma::SetInterrupt(uint32_t val) {
 	d_channel_irq_flg &= !ack;
 };
 
-_channel _dma::Channel(_port Port) {
+_channel _dma::Channel(pscx_memory::_port Port) {
 	return d_Channels[Port];
 };
 

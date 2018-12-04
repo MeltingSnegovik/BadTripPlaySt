@@ -11,7 +11,7 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 	if (addr % 4 != 0)
 		std::cout << "unhandled store32 into address " << addr << std::endl;
 	uint32_t abs_addr = pscx_memory::mask_region(addr);
-	uint32_t RetMemContr = MEMCONTROL.contains(addr);
+	uint32_t RetMemContr = pscx_memory::MEMCONTROL.contains(abs_addr);
 	if (RetMemContr = -1) {
 		switch (RetMemContr) {
 		case 0:
@@ -54,20 +54,29 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 };
 
 uint32_t _interconnect::Load32(uint32_t addr) {
-	uint32_t map_return = BIOS.contains(addr);
+	
 	uint32_t abs_addr = pscx_memory::mask_region(addr);
-	if (map_return != -1)
-		return map_return;
+
+	if (abs_addr % 4 != 0) {
+		std::cout << "Unaligned_load32_address: {:08x}" << abs_addr << std::endl;
+		return 0;
+	};
+
+	uint32_t bios_map_return = BIOS.contains(abs_addr);
+	if (bios_map_return != -1)
+		return Bios.Load32(bios_map_return);
+
+	uint32_t ram_map_ret = RAM.contains(abs_addr);
+	if (ram_map_ret != -1)
+		return ram.Load32(ram_map_ret);
+
 
 	uint32_t irq_map_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
 	if (irq_map_ret != -1) {
 		std::cout << "IRQ_control_read " << irq_map_ret << std::endl;
 		return 0;
 		}
-	return -1;
 
-	if (addr % 4 != 0)
-		std::cout << "Unaligned_load32_address: {:08x}" << addr << std::endl;
 
 	uint32_t dma_map_ret = pscx_memory::DMA.contains(abs_addr);
 	if (dma_map_ret!=-1) {
@@ -90,6 +99,7 @@ uint32_t _interconnect::Load32(uint32_t addr) {
 	};
 
 	std::cout << "Unhandled_load32_address: {:08x}" << addr << std::endl;
+	return -1;
 };
 
 void _interconnect::Store16(uint32_t addr, uint16_t val) {
@@ -127,10 +137,9 @@ void _interconnect::Store16(uint32_t addr, uint16_t val) {
 
 void _interconnect::Store8(uint32_t addr, uint8_t val) {
 	uint32_t abs_addr = pscx_memory::mask_region(addr);
-	uint32_t res = pscx_memory::EXPANSION2.contains(addr);
+	uint32_t res = pscx_memory::EXPANSION2.contains(abs_addr);
 	if (res != (-1)) {
 		std::cout << "Unhandled_store8_into_address: " << res << std::endl;
-		
 		return;
 		}
 
@@ -148,7 +157,6 @@ uint8_t _interconnect::Load8(uint32_t addr) {
 
 
 	uint32_t ans_ram = pscx_memory::RAM.contains(abs_addr);
-
 	if (ans_ram != (-1)) {
 		return ram.Load8(ans_ram);
 	};
@@ -217,7 +225,7 @@ uint32_t _interconnect::DmaReg(uint32_t offset) {
 		channel = d_DMA.Channel(pscx_memory::FromIndex(major));
 		switch (minor) {
 		case 8:
-			channel.Control();
+			return channel.Control();
 			break;
 		default:
 			std::cout << "Unhandled DMA read at: " << offset << std::endl;
@@ -227,11 +235,11 @@ uint32_t _interconnect::DmaReg(uint32_t offset) {
 	case 7:
 		switch (minor) {
 		case 0:
-			d_DMA.Control();
+			return d_DMA.Control();
 			break;
 		case 4:
+			return d_DMA.Interrupt();
 			break;
-			d_DMA.Interrupt();
 		default:
 			std::cout << "Unhandled DMA read at: " << offset << std::endl;
 			break;
@@ -241,6 +249,7 @@ uint32_t _interconnect::DmaReg(uint32_t offset) {
 		std::cout << "Unhandled DMA read at: "<< offset << std::endl;
 		break;
 	};
+	return 0;
 };
 
 void _interconnect::SetDmaReg(uint32_t offset, uint32_t val) {
@@ -328,10 +337,10 @@ void _interconnect::DoDmaBlck(_port port) {
 
 	while (remsz > 0) {
 		uint32_t cur_addr = addr & 0x1ffffc;
-
+		uint32_t src_word;
 		switch (c_channel.Direction()) {
 		case _channel::_direction::e_FromRam:
-			uint32_t src_word= ram.Load32(cur_addr);
+			src_word= ram.Load32(cur_addr);
 			switch (port) {
 			case _port::e_Gpu:
 				d_gpu.Gp0(src_word);
@@ -342,7 +351,6 @@ void _interconnect::DoDmaBlck(_port port) {
 			};
 			break;
 		case _channel::_direction::e_ToRam:
-			uint32_t src_word;
 			switch (port) {
 			case _port::e_Otc:
 				switch (remsz) {
@@ -350,7 +358,7 @@ void _interconnect::DoDmaBlck(_port port) {
 					src_word = 0xffffff;
 					break;
 				default:
-					src_word = WrappIntSub(addr, 4) & 0x1fffff;
+					src_word = pscx_rustf::WrappIntSub(addr, 4) & 0x1fffff;
 					break;
 				};
 				break;
@@ -359,7 +367,7 @@ void _interconnect::DoDmaBlck(_port port) {
 				break;
 			};
 		};
-		addr = WrappIntAdd(addr, c_incr);
+		addr = pscx_rustf::WrappIntAdd(addr, c_incr);
 		remsz--;
 	};
 	c_channel.Done();

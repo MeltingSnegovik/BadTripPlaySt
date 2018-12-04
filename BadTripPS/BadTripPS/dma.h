@@ -23,5 +23,5 @@ struct _dma
 	bool Irq();
 	uint32_t Interrupt();
 	void SetInterrupt(uint32_t val);
-	_channel Channel(_port Port);
+	_channel Channel(pscx_memory::_port Port);
 };

@@ -8,9 +8,10 @@
 
 int main(int argc, char** argv)
 {
-	std::string pth = "D:\cpp\BadTripPlaySt\BadTripPS\BadTripPS\SCPH1001.BIN";
+	std::string pth = "D:\\cpp\\BadTripPlaySt\\BadTripPS\\BadTripPS\\SCPH1001.BIN";
 	_bios Bios;
 	_bios::BiosState bios_state = Bios.LoadBios(pth);
+	std::cout << bios_state << std::endl;
 	
 	_interconnect Inter(Bios);
 	_cpu Cpu(Inter);

@@ -18,8 +18,8 @@ uint32_t _instruction::CopOpCode() {
 };
 
 // like a t
-_regIndex _instruction::RegIndex() {
-	return _regIndex((data >> 16) & 0x1f);
+pscx_memory::_regIndex _instruction::RegIndex() {
+	return pscx_memory::_regIndex((data >> 16) & 0x1f);
 };
 
 // like a imm
@@ -34,8 +34,8 @@ uint32_t _instruction::SignExt() {
 };
 
 // like a d
-_regIndex _instruction::RegInd15() {
-	return _regIndex((data >> 11) & 0x1f);
+pscx_memory::_regIndex _instruction::RegInd15() {
+	return pscx_memory::_regIndex((data >> 11) & 0x1f);
 };
 
 // like a shift
@@ -48,6 +48,6 @@ uint32_t _instruction::ImmJump() {
 	return (data & 0x3ffffff);
 };
 
-_regIndex _instruction::s() {
-	return _regIndex((data >> 21) & 0x1f);
+pscx_memory::_regIndex _instruction::s() {
+	return pscx_memory::_regIndex((data >> 21) & 0x1f);
 };

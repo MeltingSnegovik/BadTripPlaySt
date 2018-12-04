@@ -5,6 +5,18 @@
 
 namespace pscx_gpu
 {
+
+	struct _horizontalRes {
+		uint8_t d_data;
+
+		_horizontalRes(uint8_t hr1, uint8_t hr2) :
+			d_data(0)
+		{
+			d_data = ((hr2 & 1) | ((hr1 & 3) << 1));
+		};
+		uint32_t IntoStat();
+	};
+
 	struct _gpu {
 
 		enum _textureDepth {
@@ -85,7 +97,7 @@ namespace pscx_gpu
 		/// When true all textures are disabled
 		bool d_texture_disable;
 		/// Video output horizontal resolution
-		_horizontalRes d_hres;
+		pscx_gpu::_horizontalRes d_hres;
 		/// Video output vertical resolution
 		_verticalRes d_vres;
 		/// Video mode
@@ -140,7 +152,7 @@ namespace pscx_gpu
 		/// Display output last line relative to VSYNC
 		uint16_t d_display_line_end;
 
-		_buffer d_Gp0Command;
+		pscx_memory::_buffer d_Gp0Command;
 
 		uint32_t d_Gp0WordsRemaining;
 
@@ -201,15 +213,6 @@ namespace pscx_gpu
 		void Gp1ResetCommandClear();
 };
 
-	struct _horizontalRes {
-		uint8_t d_data;
 
-		_horizontalRes(uint8_t hr1, uint8_t hr2):
-			d_data(0)
-		{
-			d_data = ((hr2 & 1) | ((hr1 & 3) << 1));
-		};
-		uint32_t IntoStat();
-	};
 };
 

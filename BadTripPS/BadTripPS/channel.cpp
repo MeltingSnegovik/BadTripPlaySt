@@ -1,9 +1,4 @@
-
-
 #include "channel.h"
-#include "stdint.h"
-#include <iostream>
-
 
 uint32_t _channel::Control() {
 	uint32_t r = 0;

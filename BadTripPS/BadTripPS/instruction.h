@@ -21,7 +21,7 @@ public:
 	uint32_t CopOpCode();
 
 	// like a t
-	_regIndex RegIndex();	
+	pscx_memory::_regIndex RegIndex();
 
 	// like a imm
 	uint32_t ImmValue();
@@ -30,7 +30,7 @@ public:
 	uint32_t SignExt();
 
 	// like a d
-	_regIndex RegInd15();
+	pscx_memory::_regIndex RegInd15();
 
 	// like a shift
 	uint32_t Shift();
@@ -39,6 +39,6 @@ public:
 	uint32_t ImmJump();
 
 	//Return register index in bits [25;21]
-	_regIndex s();
+	pscx_memory::_regIndex s();
 
 };

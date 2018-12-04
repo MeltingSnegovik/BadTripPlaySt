@@ -9,6 +9,8 @@
 #include "map.h"
 #include <cassert>
 #include <climits>
+#include <iostream>
+
 
 #define BEGIN_BIOS 0xbfc00000
 
@@ -34,9 +36,9 @@ struct _cpu
 	
 	struct _registerData
 	{
-		_regIndex	d_regIndex;
+		pscx_memory::_regIndex	d_regIndex;
 		uint32_t	d_regValue;
-		_registerData(_regIndex regInd, uint32_t regVal) :
+		_registerData(pscx_memory::_regIndex regInd, uint32_t regVal) :
 			d_regIndex(regInd),
 			d_regValue(regVal)
 		{};
@@ -90,11 +92,11 @@ struct _cpu
 			instruction_c(_instruction(Load32(pc))),// tbd
 			current_pc(pc),
 			//	pc(BEGIN_BIOS),
-			next_pc(WrappIntAdd(init_pc, 4)),
+			next_pc(pscx_rustf::WrappIntAdd(init_pc, 4)),
 			interconnect_c(inter),
 			next_instruction(0x0),
 			StatReg(0),
-			d_regData(_regIndex(0x0), 0x0),
+			d_regData(pscx_memory::_regIndex(0x0), 0x0),
 			d_hi(0xdeadbeef),
 			d_lo(0xdeadbeef),
 
@@ -109,13 +111,10 @@ struct _cpu
 		void SetDebugOnBreak(bool enable);
 		void RunNextInstruction();
 		uint32_t Load32(uint32_t addr);
-		uint32_t WrappIntAdd(uint32_t pc, uint32_t incr);
-		uint32_t WrappIntSub(uint32_t pc, uint32_t incr);
-		int32_t CheckedAdd(uint32_t what, uint32_t how);
 		void DecodeAndExecute(_instruction instruction);
 		void OpLui(_instruction instruction);
-		uint32_t Reg(_regIndex index);
-		void SetReg(_regIndex index, uint32_t val);
+		uint32_t Reg(pscx_memory::_regIndex index);
+		void SetReg(pscx_memory::_regIndex index, uint32_t val);
 		void OpOri(_instruction instruction);
 		void Store32(uint32_t addr, uint32_t value);
 		void OpSw(_instruction instruction);
@@ -135,6 +134,7 @@ struct _cpu
 		void OpAddu(_instruction instruction);
 
 		void Store16(uint32_t addr, uint16_t val);
+		void Store8(uint32_t addr, uint16_t val);
 
 		void OpSh(_instruction instruction);
 		void OpJal(_instruction instruction);

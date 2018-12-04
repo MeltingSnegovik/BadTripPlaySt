@@ -9,7 +9,7 @@ void  pscx_gpu::_horizontalRes::FromFields(uint8_t hr1, uint8_t hr2) {
 */
 
 uint32_t pscx_gpu::_horizontalRes::IntoStat() {
-	d_data = (uint32_t)d_data << 16;
+	return (uint32_t)d_data << 16;
 };
 
 uint32_t pscx_gpu::_gpu::Status() {
@@ -26,9 +26,9 @@ uint32_t pscx_gpu::_gpu::Status() {
 	r |= ((uint32_t)d_preserve_masked_pixels) << 12;
 	r |= ((uint32_t)d_field) << 13;
 	r |= ((uint32_t)d_texture_disable) << 15;
-	r |= d_hres.IntoStat();
+	r |= _gpu::d_hres.IntoStat();
 	r |= ((uint32_t)d_vres) << 19;
-	r |= ((uint32_t)d_hres.IntoStat());
+	r |= ((uint32_t)_gpu::d_hres.IntoStat());
 	r |= ((uint32_t)d_vmode) << 20;
 	r |= ((uint32_t)d_display_depth) << 21;
 	r |= ((uint32_t)d_interlaced) << 22;
