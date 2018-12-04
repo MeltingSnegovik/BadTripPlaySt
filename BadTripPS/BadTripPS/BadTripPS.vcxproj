@@ -28,6 +28,7 @@
     <ClInclude Include="interconnect.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="ram.h" />
+    <ClInclude Include="render.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BadTrip.cpp" />
@@ -40,6 +41,7 @@
     <ClCompile Include="interconnect.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="ram.cpp" />
+    <ClCompile Include="render.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2B63F4B3-2DAE-43D6-931C-F64A3EF9B685}</ProjectGuid>
@@ -98,6 +100,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>glew32.lib;glu32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

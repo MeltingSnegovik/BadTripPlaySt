@@ -2,7 +2,7 @@
 
 #include "bios.h"
 #include <iostream>
-
+#include <gl\GL.h>
 
 struct _map
 {
