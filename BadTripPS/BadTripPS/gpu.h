@@ -1,6 +1,14 @@
 #pragma once
 #include "map.h"
+#include "render.h"
 #include <iostream>
+/*
+#include <SDL.h>
+*/
+#include <SDL_opengl.h>
+#include <SDL_video.h>
+
+#include <cstdio>
 
 
 namespace pscx_gpu
@@ -17,6 +25,29 @@ namespace pscx_gpu
 		uint32_t IntoStat();
 	};
 
+	struct _position {
+		GLshort p_Ox;
+		GLshort p_Oy;
+
+		_position(uint32_t val):
+			p_Ox((int16_t)val),
+			p_Oy((int16_t)(val>>16))
+		{};
+	};
+
+	struct _color {
+		GLubyte p_Red;
+		GLubyte p_Blue;
+		GLubyte p_Green;
+
+		_color(uint32_t val) :
+			p_Red((uint8_t)val),
+			p_Blue((uint8_t)(val>>8)),
+			p_Green((uint8_t)(val>>16))
+		{};
+	};
+
+	
 	struct _gpu {
 
 		enum _textureDepth {
@@ -161,6 +192,8 @@ namespace pscx_gpu
 		//current mode of the GP0 register
 		_gp0Mode d_Gp0Mode;
 
+		_render d_render;
+
 		_gpu() :
 			d_page_base_x(0),
 			d_page_base_y(0),
@@ -180,7 +213,10 @@ namespace pscx_gpu
 			d_display_disabled(true),
 			d_interrupt(false),
 			d_dma_direction(_dmaDirection::e_OFF)
-		{};
+			//d_render()
+		{
+			d_hres = _horizontalRes(0, 0);
+		};
 
 		uint32_t Status();
 		void Gp0(uint32_t val);

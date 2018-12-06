@@ -9,14 +9,14 @@
 
 
 struct _interconnect {
-public:
-	
-	_bios Bios;
-	_ram ram;
+	_bios d_bios;
+	_ram d_ram;
 	_dma d_DMA;
+	int a;
 	pscx_gpu::_gpu d_gpu;
 	_interconnect(_bios bios) :
-		Bios(bios)
+		a(500),
+		d_bios(bios)
 //		MemControll(0x1f801000,36)
 	{
 	};

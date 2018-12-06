@@ -7,7 +7,7 @@
 struct _bios {
 public:
 	
-	std::string path;
+//	std::string path;
 	enum BiosState
 	{
 		BIOS_STATE_SUCCESS,
@@ -16,7 +16,8 @@ public:
 		BIOS_STATE_COUNT
 	};
 
-	BiosState LoadBios(std::string path_c);
+	BiosState LoadBios();
+//	BiosState LoadBios(std::string path_c);
 	std::vector<uint8_t> data;
 
 	uint32_t Load32(uint32_t offset);

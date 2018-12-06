@@ -391,6 +391,9 @@ void pscx_gpu::_gpu::Gp0QuadShadedOpaque() {
 };
 
 void pscx_gpu::_gpu::Gp0TriangleShadedOpaque() {
+	_position tr_positions[3] = { _position(d_Gp0Command.m_buffer[1]), _position(d_Gp0Command.m_buffer[3]),_position(d_Gp0Command.m_buffer[5]) };
+	_color tr_colors[3] = { _color(d_Gp0Command.m_buffer[0]),_color(d_Gp0Command.m_buffer[2]) ,_color(d_Gp0Command.m_buffer[4]) };
+//	d_render.PushTriangle();
 	std::cout << "pscx_gpu::_gpu::Gp0TriangleShadedOpaque" << std::endl;
 };
 

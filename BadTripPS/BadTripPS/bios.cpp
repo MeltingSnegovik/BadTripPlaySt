@@ -2,9 +2,10 @@
 
 #include "bios.h"
 
-	
-	_bios::BiosState _bios::LoadBios(std::string path_c) {
-		std::basic_ifstream<uint8_t> biosFile(path_c, std::ios::in | std::ios::binary); // char?
+
+//_bios::BiosState _bios::LoadBios(std::string path_c) {
+_bios::BiosState _bios::LoadBios() {
+		std::basic_ifstream<uint8_t> biosFile("D:\\cpp\\BadTripPlaySt\\BadTripPS\\BadTripPS\\SCPH1001.BIN", std::ios::in | std::ios::binary); // char?
 
 		if (!biosFile.good())
 			return BIOS_STATE_INCORRECT_FILENAME;

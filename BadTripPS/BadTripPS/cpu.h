@@ -88,24 +88,26 @@ struct _cpu
 		_registerData d_regData;
 		
 		_cpu(_interconnect inter) :
-			init_pc(BEGIN_BIOS),
-			instruction_c(_instruction(Load32(pc))),// tbd
-			current_pc(pc),
-			//	pc(BEGIN_BIOS),
-			next_pc(pscx_rustf::WrappIntAdd(init_pc, 4)),
+			pc(BEGIN_BIOS),
 			interconnect_c(inter),
+			next_pc(0),
+			instruction_c(0),// tbd
+			current_pc(0),
+			//	pc(BEGIN_BIOS),
 			next_instruction(0x0),
 			StatReg(0),
-			d_regData(pscx_memory::_regIndex(0x0), 0x0),
+			d_regData(pscx_memory::_regIndex(0x0),0x0),
 			d_hi(0xdeadbeef),
 			d_lo(0xdeadbeef),
 
 			d_branch(false),
 			d_delay_slot(false)
-
 			{
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
+				next_pc = pscx_rustf::WrappIntAdd(BEGIN_BIOS, 4);
+				instruction_c = _instruction(_cpu::Load32(BEGIN_BIOS));
+				d_regData = _registerData(pscx_memory::_regIndex(0x0), 0x0);
 			};
 
 		void SetDebugOnBreak(bool enable);

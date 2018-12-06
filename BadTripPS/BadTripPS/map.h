@@ -81,6 +81,8 @@ namespace pscx_memory {
 	const _map DMA = _map(0x1f801080, 0x80);
 	const _map GPU = _map(0x1f801810, 8);
 
+	const uint32_t VERTEXBUFFERLEN = 64 * 1024;
+
 	uint32_t mask_region(uint32_t addr);
 
 	_port FromIndex(uint32_t index);

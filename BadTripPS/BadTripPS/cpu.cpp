@@ -32,7 +32,7 @@ void _cpu::RunNextInstruction() {
 
 void _cpu::DecodeAndExecute(_instruction instruction) {
 	uint32_t retInstrFunct = instruction.Function();
-	std::cout << "Instruction " << retInstrFunct << std::endl;
+	std::cout << "Instruction " << instruction.data << std::endl;
 	switch (retInstrFunct) {
 		case 0b000000:
 			switch (instruction.SubFunction()) {

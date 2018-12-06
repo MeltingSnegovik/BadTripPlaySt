@@ -64,11 +64,11 @@ uint32_t _interconnect::Load32(uint32_t addr) {
 
 	uint32_t bios_map_return = BIOS.contains(abs_addr);
 	if (bios_map_return != -1)
-		return Bios.Load32(bios_map_return);
+		return d_bios.Load32(bios_map_return);
 
 	uint32_t ram_map_ret = RAM.contains(abs_addr);
 	if (ram_map_ret != -1)
-		return ram.Load32(ram_map_ret);
+		return d_ram.Load32(ram_map_ret);
 
 
 	uint32_t irq_map_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
@@ -117,7 +117,7 @@ void _interconnect::Store16(uint32_t addr, uint16_t val) {
 	}
 	uint32_t ram_mar_ret = pscx_memory::RAM.contains(abs_addr);
 	if (ram_mar_ret != -1) {
-		ram.Store16(ram_mar_ret, val);
+		d_ram.Store16(ram_mar_ret, val);
 		return;
 	}
 	
@@ -146,7 +146,7 @@ void _interconnect::Store8(uint32_t addr, uint8_t val) {
 	uint32_t ans_ram = pscx_memory::RAM.contains(abs_addr);
 	if (res != (-1)) {
 		std::cout << "Unhandled_store8_into_address: " << res << std::endl;
-		ram.Store8(ans_ram, val);
+		d_ram.Store8(ans_ram, val);
 		return;
 	}
 	std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
@@ -158,13 +158,13 @@ uint8_t _interconnect::Load8(uint32_t addr) {
 
 	uint32_t ans_ram = pscx_memory::RAM.contains(abs_addr);
 	if (ans_ram != (-1)) {
-		return ram.Load8(ans_ram);
+		return d_ram.Load8(ans_ram);
 	};
 
 	uint32_t ans = BIOS.contains(abs_addr);
 	if (ans != (-1)) {
 		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
-		return Bios.Load8(ans);
+		return d_bios.Load8(ans);
 	};
 
 	uint32_t ans_exp = pscx_memory::EXPANSION1.contains(abs_addr);
@@ -186,7 +186,7 @@ uint16_t _interconnect::Load16(uint32_t addr) {
 
 	uint32_t ram_map_ret = pscx_memory::RAM.contains(abs_addr);
 	if (ram_map_ret != (-1)) {
-		return ram.Load16(ram_map_ret);
+		return d_ram.Load16(ram_map_ret);
 	};
 
 	uint32_t irq_map_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
@@ -340,7 +340,7 @@ void _interconnect::DoDmaBlck(_port port) {
 		uint32_t src_word;
 		switch (c_channel.Direction()) {
 		case _channel::_direction::e_FromRam:
-			src_word= ram.Load32(cur_addr);
+			src_word= d_ram.Load32(cur_addr);
 			switch (port) {
 			case _port::e_Gpu:
 				d_gpu.Gp0(src_word);
@@ -363,7 +363,7 @@ void _interconnect::DoDmaBlck(_port port) {
 				};
 				break;
 			default:
-				ram.Store32(cur_addr, src_word);
+				d_ram.Store32(cur_addr, src_word);
 				break;
 			};
 		};
@@ -399,11 +399,11 @@ void _interconnect::DoDmaLinkedList(_port port) {
 
 	while (true) {
 
-		uint32_t header = ram.Load32(addr);
+		uint32_t header = d_ram.Load32(addr);
 		uint32_t remsz = header >> 24;
 		while (remsz > 0) {
 			addr = (addr + 4) & 0x1ffffc;
-			uint32_t command = ram.Load32(addr);
+			uint32_t command = d_ram.Load32(addr);
 			d_gpu.Gp0(command);
 			remsz--;
 		};
