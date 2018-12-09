@@ -1,6 +1,6 @@
-﻿  BadTrip.cpp
-  Generating Code...
-  Compiling...
+﻿  render.cpp
+  ram.cpp
+d:\cpp\badtripplayst\badtripps\badtripps\ram.cpp(33): warning C4244: 'initializing': conversion from 'uint16_t' to 'uint8_t', possible loss of data
   map.cpp
   interconnect.cpp
 d:\cpp\badtripplayst\badtripps\badtripps\interconnect.cpp(410): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
@@ -25,9 +25,19 @@ d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(581): warning C4101: 'v': unref
 d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(778): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
 d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(815): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
 d:\cpp\badtripplayst\badtripps\badtripps\cpu.cpp(896): warning C4293: '>>': shift count negative or too big, undefined behavior
+  channel.cpp
+d:\cpp\badtripplayst\badtripps\badtripps\channel.cpp(19): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+d:\cpp\badtripplayst\badtripps\badtripps\channel.cpp(28): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+d:\cpp\badtripplayst\badtripps\badtripps\channel.cpp(37): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+d:\cpp\badtripplayst\badtripps\badtripps\channel.cpp(57): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+d:\cpp\badtripplayst\badtripps\badtripps\channel.cpp(58): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+  bios.cpp
+  BadTrip.cpp
   Generating Code...
-d:\cpp\badtripplayst\badtripps\badtripps\interconnect.cpp(176): warning C4715: '_interconnect::Load8': not all control paths return a value
+d:\cpp\badtripplayst\badtripps\badtripps\bios.cpp(18): warning C4715: '_bios::LoadBios': not all control paths return a value
+d:\cpp\badtripplayst\badtripps\badtripps\channel.cpp(120): warning C4715: '_channel::TransferSize': not all control paths return a value
 d:\cpp\badtripplayst\badtripps\badtripps\interconnect.cpp(197): warning C4715: '_interconnect::Load16': not all control paths return a value
+d:\cpp\badtripplayst\badtripps\badtripps\interconnect.cpp(176): warning C4715: '_interconnect::Load8': not all control paths return a value
 d:\cpp\badtripplayst\badtripps\badtripps\map.cpp(43): warning C4715: 'pscx_memory::FromIndex': not all control paths return a value
   BadTripPS.vcxproj -> D:\cpp\BadTripPlaySt\BadTripPS\Debug\BadTripPS.exe
   BadTripPS.vcxproj -> D:\cpp\BadTripPlaySt\BadTripPS\Debug\BadTripPS.pdb (Partial PDB)
