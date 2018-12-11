@@ -4,10 +4,6 @@
 #include "map.h"
 #include "render.h"
 #include <iostream>
-/*
-#include <SDL.h>
-*/
-
 #include <cstdio>
 
 
@@ -169,7 +165,8 @@ namespace pscx_gpu
 		//current mode of the GP0 register
 		_gp0Mode d_Gp0Mode;
 
-//		_render d_render;
+		_render d_render;
+	
 
 		_gpu() :
 			d_page_base_x(0),

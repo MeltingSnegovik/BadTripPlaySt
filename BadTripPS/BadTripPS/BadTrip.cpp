@@ -4,6 +4,8 @@
 #include "cpu.h"
 #include "interconnect.h"
 #include "map.h"
+#include "wind.h"
+
 /*
 #include <SDL.h>
 */
@@ -21,7 +23,8 @@ int main(int argc, char** argv)
 		std::cout << "Invalid BIOS size "  << std::endl;
 		return EXIT_FAILURE;
 	}
-	
+	pscx_wind::InitW();
+
 	_interconnect Inter= _interconnect(Bios);
 	_cpu Cpu = _cpu(Inter);
 	while (true) {

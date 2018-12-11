@@ -3,20 +3,22 @@
 
 //#include <SDL.h>
 #include <windows.h>
+#include <string.h>
 
-
+/*
 #include <GL\glew.h>
 #include <GL\wglew.h>
 #include <gl\GL.h>
 #include <gl\GLU.h>
-//#include <gl\glext.h>
-//#include <gl\wglext.h>
-//#include <string.h>
-
+#include <gl\glext.h>
+#include <gl\wglext.h>
 #include <SDL_opengl.h>
 #include <SDL_video.h>
 #define GL_GLEXT_PROTOTYPES
 #define GLEW_STATIC 
+*/
+#include "glad.h"
+#include "glfw3.h"
 
 #include <cstdio>
 #include <iostream>
@@ -44,14 +46,14 @@ struct _color {
 	{};
 };
 
-template<class sometype> struct _buffer {
+template<class sometype> struct _tbuffer {
 	GLuint object;
 	sometype* map;
 	uint32_t elsize = sizeof(sometype);
 	//uint32_t size?
 		
 	//wtf?? what do with this shit?
-	_buffer() :
+	_tbuffer() :
 		object(0)
 	{
 		glGenBuffers(1, &object);
@@ -59,10 +61,10 @@ template<class sometype> struct _buffer {
 
 
 		GLsizeiptr buffersize = elsize* pscx_memory::VERTEXBUFFERLEN;
+		
+		GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
 
-		auto access = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
-
-
+		
 		glBufferStorage(
 			GL_ARRAY_BUFFER
 			, buffersize
@@ -85,11 +87,11 @@ template<class sometype> struct _buffer {
 
 
 	void Set(uint32_t index, sometype val);
-	~_buffer()
+	~_tbuffer()
 	{
-		__glewBindBuffer(GL_ARRAY_BUFFER, object);
-		__glewUnmapBuffer(GL_ARRAY_BUFFER);
-		__glewDeleteBuffers(1, &object);
+		glBindBuffer(GL_ARRAY_BUFFER, object);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glDeleteBuffers(1, &object);
 	}
 	//tbd
 	//	auto s = slice
@@ -97,50 +99,24 @@ template<class sometype> struct _buffer {
 
 struct _render {
 	
-	
-	SDL_Window* r_window;
-	SDL_Surface* r_screenSurface;
-	SDL_GLContext* r_context;
-	
+	GLFWwindow* r_window;
+
 	GLuint r_vertexShader;
 	GLuint r_fragmentShader;
 	GLuint r_program;
 	GLuint r_vertex_ar_obj;
 
-	_buffer<_position> r_positions;
-	_buffer<_color> r_colors;
+
+	_tbuffer<_position> r_positions;
+	_tbuffer<_color> r_colors;
 	
 
 	uint32_t r_nvertices;
 
 	_render() :
-		r_window(NULL),
-		r_screenSurface(NULL),
-		r_nvertices(0)
+		r_window(NULL)
 	{		
-		r_window = SDL_CreateWindow(
-			"BadTripPS", 
-			SDL_WINDOWPOS_UNDEFINED, 
-			SDL_WINDOWPOS_UNDEFINED, 
-			640,
-			480,
-			SDL_WINDOW_SHOWN);
-		if (r_window == NULL)
-		{
-			printf("Windows don't exist SDL_Error: %s\n", SDL_GetError());
-		}
-		else
-		{
-			
 			//surface
-			r_screenSurface = SDL_GetWindowSurface(r_window);
-
-			//white surface
-			SDL_FillRect(r_screenSurface, NULL, SDL_MapRGB(r_screenSurface->format, 0xFF, 0xFF, 0xFF));
-
-			//follow white surface
-			SDL_UpdateWindowSurface(r_window);
-			
 
 			std::string vs_src = "vertex.glsl";
 			std::string fs_src = "fragment.glsl";
@@ -156,36 +132,36 @@ struct _render {
 
 			GLuint vao = 0;
 			
-			__glewGenVertexArrays(1,&vao);
-			__glewBindVertexArray(vao);
+			glGenVertexArrays(1,&vao);
+			glBindVertexArray(vao);
 			
-			_buffer<_position> positions;
+			_tbuffer<_position> positions;
 			GLchar try_attr_p[] = "vertex_position";
 			GLuint index_1 = FindProgramAttrib(program,&try_attr_p[0]);
-			__glewEnableVertexAttribArray(index_1);
-			__glewVertexAttribLPointer(index_1, 2, GL_SHORT, 0, nullptr);
+			glEnableVertexAttribArray(index_1);
+			glVertexAttribLPointer(index_1, 2, GL_SHORT, 0, nullptr);
 
-			_buffer<_color> colors;
+			_tbuffer<_color> colors;
 			GLchar try_attr_c[] = "vertex_color";
 			GLuint index_2 = FindProgramAttrib(program, &try_attr_c[0]);
-			__glewEnableVertexAttribArray(index_2);
-			__glewVertexAttribLPointer(index_2, 3, GL_UNSIGNED_BYTE, 0, nullptr);
+			glEnableVertexAttribArray(index_2);
+			glVertexAttribLPointer(index_2, 3, GL_UNSIGNED_BYTE, 0, nullptr);
 
 			r_vertex_ar_obj = vao;
 
-		};
+	
 	};
 	
 	GLuint CompileShader(const GLchar** src,const GLenum shader_type);
 	GLuint LinkProgram(GLuint v_shader, GLuint f_shader);
 	GLuint FindProgramAttrib(GLuint program,const GLchar* attr);
-	void PushTriangle(_buffer<_position> positions, _buffer<_color> colors);
+	void PushTriangle(_tbuffer<_position> positions, _tbuffer<_color> colors);
 
 	~_render()	{
-		__glewDeleteVertexArrays(1, &r_vertex_ar_obj);
-		__glewDeleteShader(r_vertexShader);
-		__glewDeleteShader(r_fragmentShader);
-		__glewDeleteProgram(r_program);
+		glDeleteVertexArrays(1, &r_vertex_ar_obj);
+		glDeleteShader(r_vertexShader);
+		glDeleteShader(r_fragmentShader);
+		glDeleteProgram(r_program);
 	};
 
 };

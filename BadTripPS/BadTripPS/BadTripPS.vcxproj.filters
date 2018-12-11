@@ -45,6 +45,9 @@
     <ClInclude Include="render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="wind.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bios.cpp">
@@ -78,6 +81,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="render.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wind.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
