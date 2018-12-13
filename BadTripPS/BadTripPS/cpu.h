@@ -117,6 +117,7 @@ struct _cpu
 		void OpLui(_instruction instruction);
 		uint32_t Reg(pscx_memory::_regIndex index);
 		void SetReg(pscx_memory::_regIndex index, uint32_t val);
+		void SetPC(uint32_t f_pc);
 		void OpOri(_instruction instruction);
 		void Store32(uint32_t addr, uint32_t value);
 		void OpSw(_instruction instruction);

@@ -41,14 +41,71 @@ template<class sometype> void _tbuffer<sometype>::Set(uint32_t index, sometype v
 	*(map + sizeof(long)) = val;
 };
 
-void _render::PushTriangle(_tbuffer<_position> positions, _tbuffer<_color> colors) {
+void _render::PushTriangle(_position positions[], _color colors[]) {
 	if (r_nvertices + 3> pscx_memory::VERTEXBUFFERLEN) {
 		std::cout << "Vertex attrib buffer full forcing draw" << std::endl;
-	//	RDraw();
+		RDraw();
 	}
-	for (int i = 0;i <= 3;i++) {
-//		r_positions.Set(r_nvertices, positions[i]);
-//		r_colors.Set(r_nvertices, colors[i]);
+	for (int i = 0;i < 3;i++) {
+	r_positions.Set(r_nvertices, positions[i]);
+	r_colors.Set(r_nvertices, colors[i]);
+	r_nvertices++;
+	};
+};
+void _render::PushQuad(_position positions[], _color colors[]) {
+	if (r_nvertices + 6 > pscx_memory::VERTEXBUFFERLEN) {
+		RDraw();
 	}
+	for (int i = 0;i < 3;i++) {
+		r_positions.Set(r_nvertices, positions[i]);
+		r_colors.Set(r_nvertices, colors[i]);
+		r_nvertices++;
+	};
+	for (int i = 1;i < 4;i++) {
+		r_positions.Set(r_nvertices, positions[i]);
+		r_colors.Set(r_nvertices, colors[i]);
+		r_nvertices++;
+	};
+};
+
+
+void _render::RDraw() {
+	glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+	glDrawArrays(GL_TRIANGLES, 0,(GLsizei)r_nvertices);
+	auto sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+	while (true) {
+		auto r = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, 10000000);
+		if (r == GL_ALREADY_SIGNALED || GL_CONDITION_SATISFIED){
+			break;
+		};
+	};
+	r_nvertices = 0;
+};
+
+void _render::Display() {
+	_render::RDraw();
+	glfwSwapBuffers(wind.window);
+};
+
+void _render::Gp0DrawingOffset() {
+
+	_render::Display();
+};
+
+
+void _render::CheckForErrors() {
+	bool fatal = false;
+	while (true) {
+		std::vector<GLchar> qbuffer(4096,0);
+		GLenum severety = 0;
+		GLenum source = 0;
+		GLsizei message_size = 0;
+		GLenum mtype = 0;
+		GLuint id = 0;
+//		auto count = glGetDebugMessageLog(1, qbuffer.size, &source, &mtype, &id, &severety, &message_size, &qbuffer[0]); //tbd
+//		if (count == 0)
+//			break;
+		std::cout << severety << " " << source << " " << message_size << " " << mtype << " " << id << std::endl;
+	};
 };
 

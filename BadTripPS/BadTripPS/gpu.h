@@ -5,6 +5,7 @@
 #include "render.h"
 #include <iostream>
 #include <cstdio>
+#include "wind.h"
 
 
 namespace pscx_gpu
@@ -166,9 +167,9 @@ namespace pscx_gpu
 		_gp0Mode d_Gp0Mode;
 
 		_render d_render;
-	
+		pscx_wind::_wind wind;
 
-		_gpu() :
+		_gpu(pscx_wind::_wind d_wind) :
 			d_page_base_x(0),
 			d_page_base_y(0),
 			d_semi_transparency(0),
@@ -186,8 +187,9 @@ namespace pscx_gpu
 			d_interlaced(false),
 			d_display_disabled(true),
 			d_interrupt(false),
-			d_dma_direction(_dmaDirection::e_OFF)
-			//d_render()
+			d_dma_direction(_dmaDirection::e_OFF),
+			wind(d_wind),
+			d_render(d_wind)
 		{
 			d_hres = _horizontalRes(0, 0);
 		};

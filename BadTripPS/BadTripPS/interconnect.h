@@ -4,6 +4,7 @@
 #include "ram.h"
 #include "dma.h"
 #include "gpu.h"
+#include "wind.h"
 
 #define START_CASH_DATA 0xbfc00000
 
@@ -12,11 +13,14 @@ struct _interconnect {
 	_bios d_bios;
 	_ram d_ram;
 	_dma d_DMA;
+	pscx_wind::_wind d_wind;
 	int a;
 	pscx_gpu::_gpu d_gpu;
-	_interconnect(_bios bios) :
+	_interconnect(_bios bios,pscx_wind::_wind wind) :
 		a(500),
-		d_bios(bios)
+		d_bios(bios),
+		d_wind(wind),
+		d_gpu(wind)
 //		MemControll(0x1f801000,36)
 	{
 	};

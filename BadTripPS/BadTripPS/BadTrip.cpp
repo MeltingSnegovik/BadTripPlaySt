@@ -23,9 +23,10 @@ int main(int argc, char** argv)
 		std::cout << "Invalid BIOS size "  << std::endl;
 		return EXIT_FAILURE;
 	}
-	pscx_wind::InitW();
-
-	_interconnect Inter= _interconnect(Bios);
+	
+	pscx_wind::_wind wind;
+	wind.InitW();
+	_interconnect Inter= _interconnect(Bios,wind);
 	_cpu Cpu = _cpu(Inter);
 	while (true) {
 		Cpu.RunNextInstruction();

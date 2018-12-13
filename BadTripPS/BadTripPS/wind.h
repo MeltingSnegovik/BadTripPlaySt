@@ -6,5 +6,11 @@
 
 namespace pscx_wind
 {
-	void InitW();
-}
+
+	struct _wind {
+		GLFWwindow* window;
+		GLuint a;
+
+		void InitW();
+	};
+};

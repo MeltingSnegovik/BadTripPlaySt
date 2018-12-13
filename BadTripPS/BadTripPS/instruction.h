@@ -41,4 +41,5 @@ public:
 	//Return register index in bits [25;21]
 	pscx_memory::_regIndex s();
 
+	bool IsGteOP();
 };

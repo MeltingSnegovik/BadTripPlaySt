@@ -29,7 +29,7 @@ uint32_t _instruction::ImmValue() {
 
 // like a imm_se
 uint32_t _instruction::SignExt() {
-	uint16_t v = (data & 0xffff);
+	int16_t v = (data & 0xffff);
 	return (uint32_t)v;
 };
 
@@ -50,4 +50,9 @@ uint32_t _instruction::ImmJump() {
 
 pscx_memory::_regIndex _instruction::s() {
 	return pscx_memory::_regIndex((data >> 21) & 0x1f);
+};
+
+
+bool _instruction::IsGteOP() {
+	return Function() == 0b010001;
 };

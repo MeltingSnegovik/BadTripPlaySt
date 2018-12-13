@@ -8,6 +8,11 @@ uint32_t _cpu::Load32(uint32_t addr) {
 	return interconnect_c.Load32(addr);
 };
 
+void _cpu::SetPC(uint32_t f_pc) {
+	pc = f_pc;
+	next_pc = f_pc;
+};
+
 void _cpu::RunNextInstruction() {
 	current_pc = pc;
 	if (current_pc % 4 != 0) {
@@ -17,7 +22,8 @@ void _cpu::RunNextInstruction() {
 	instruction_c= next_instruction;
 	_instruction new_instruction(Load32(pc));
 	next_instruction = new_instruction;
-	pc= pscx_rustf::WrappIntAdd(pc,4);
+	pc = next_pc;
+	next_pc= pscx_rustf::WrappIntAdd(pc,4);
 	SetReg(d_regData.d_regIndex, d_regData.d_regValue);
 
 	d_delay_slot = d_branch;
@@ -260,16 +266,16 @@ void _cpu::OpLui(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	uint32_t v = i << 16;
 
-	this->SetReg(t, v);
+	SetReg(t, v);
 };
 
 void _cpu::OpOri(_instruction instruction) {
 	uint32_t i = instruction.ImmValue();
 	pscx_memory::_regIndex t = instruction.RegIndex();
-	pscx_memory::_regIndex s = instruction.s(); // tbd
+	pscx_memory::_regIndex s = instruction.s(); 
 
-	uint32_t v = this->Reg(s);
-	this->SetReg(t, v);
+	uint32_t v = Reg(s) | i;
+	SetReg(t, v);
 };
 
 //Store Word
@@ -410,10 +416,10 @@ void _cpu::OpAddi(_instruction instruction) {
 	int32_t i = (int32_t)instruction.SignExt();
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	pscx_memory::_regIndex s = instruction.s();
-	s = (int32_t)Reg(s);
+	int32_t t_s = (int32_t)Reg(s);
 	uint32_t v;
-	if (pscx_rustf::CheckedAdd(s.m_index, (uint32_t)i))	{
-		v = (uint32_t)(s.m_index + (uint32_t)i);
+	if (pscx_rustf::CheckedAdd(t_s, (int32_t)i))	{
+		v = (uint32_t)(t_s + i);
 		SetReg(t, v);
 	}	
 	else {
@@ -504,10 +510,8 @@ void _cpu::OpAndi(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	pscx_memory::_regIndex s = instruction.s();
 
-	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
-	uint32_t v = Reg(t);
-
-	Store8(addr, (uint8_t)v);
+	uint32_t v = Reg(s) &i;
+	SetReg(t, v);
 };
 
 void _cpu::OpJr(_instruction instruction) {
@@ -516,7 +520,7 @@ void _cpu::OpJr(_instruction instruction) {
 };
 
 uint8_t _cpu::Load8(uint32_t addr) {
-	return (uint8_t)interconnect_c.Load32(addr);
+	return (uint8_t)interconnect_c.Load8(addr);
 };
 
 void _cpu::OpLb(_instruction instruction) {
@@ -578,9 +582,8 @@ void _cpu::OpAdd(_instruction instruction) {
 
 	int32_t s_int = (int32_t)Reg(s);
 	int32_t t_int = (int32_t)Reg(t);
-	uint32_t v;
 	if (pscx_rustf::CheckedAdd(s_int, t_int))
-		SetReg(d, s_int + t_int);
+		SetReg(d, (uint32_t)(s_int + t_int));
 	else
 		Exception(_exception::e_OVERFLOW);
 };
@@ -588,7 +591,7 @@ void _cpu::OpAdd(_instruction instruction) {
 void _cpu::OpBgtz(_instruction instruction) {
 	uint32_t i = instruction.SignExt();
 	pscx_memory::_regIndex s = instruction.s();
-	uint32_t v = Reg(s);
+	int32_t v = (int32_t)Reg(s);
 	
 	if (v > 0) {
 		Branch(i);	
@@ -631,7 +634,7 @@ void _cpu::OpBxx(_instruction instruction) {
 	uint32_t d_instr = instruction_c.data;
 	
 	uint32_t is_bgez = (d_instr >> 16) & 1;
-	uint32_t is_link = (d_instr >> 17) & 0xf; //==8 tbd
+	bool is_link = ((d_instr >> 17) & 0xf == 8);
 	
 	int32_t v = (int32_t)Reg(s);
 	uint32_t test;
@@ -658,12 +661,10 @@ void _cpu::OpSlti(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	
-	uint32_t v;
 	if ((int32_t)Reg(s) < i)
-		v=1;
+		SetReg(t, (uint32_t)1);
 	else 
-		v=0;
-	SetReg(t,(uint32_t)v);
+		SetReg(t, (uint32_t)0);
 };
 
 void _cpu::OpSubu(_instruction instruction) {
@@ -671,7 +672,7 @@ void _cpu::OpSubu(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	pscx_memory::_regIndex d = instruction.RegInd15();
 	
-	uint32_t v = pscx_rustf::WrappIntAdd(Reg(s),Reg(t));
+	uint32_t v = pscx_rustf::WrappIntSub(Reg(s),Reg(t));
 	SetReg(d,v);
 };
 
@@ -680,7 +681,7 @@ void _cpu::OpSra(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	pscx_memory::_regIndex d = instruction.RegInd15();
 	
-	int32_t v = (int32_t)Reg(t)>>i;
+	int32_t v = ((int32_t)Reg(t))>>i;
 	SetReg(d,(uint32_t)v);
 };
 
@@ -931,18 +932,10 @@ void _cpu::OpSub(_instruction instruction) {
 	int32_t a = (int32_t)Reg(s);
 	int32_t b = (int32_t)Reg(t);
 
-	int32_t v;
 	if (pscx_rustf::CheckedSub(a, b))
-		v = (int32_t)(a - b);
+		SetReg(d, (uint32_t)(a-b));
 	else
-		v = 0;
-
-	if (v != -1) {
-		SetReg(d, v);
-	}
-	else {
 		Exception(_exception::e_OVERFLOW);
-	}
 };
 
 

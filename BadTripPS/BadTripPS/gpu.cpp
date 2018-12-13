@@ -357,6 +357,19 @@ void pscx_gpu::_gpu::Gp0Nop(uint32_t val) {
 };
 
 void pscx_gpu::_gpu::Gp0QuadMonoOpaque(uint32_t val) {
+	_position qd_positions[4] = {
+		_position(d_Gp0Command.m_buffer[1]),
+		_position(d_Gp0Command.m_buffer[2]),
+		_position(d_Gp0Command.m_buffer[3]),
+		_position(d_Gp0Command.m_buffer[4])
+		};
+	_color qd_colors[4] = {
+		_color(d_Gp0Command.m_buffer[0]),
+		_color(d_Gp0Command.m_buffer[0]),
+		_color(d_Gp0Command.m_buffer[0]),
+		_color(d_Gp0Command.m_buffer[0])
+		};
+	d_render.PushQuad(qd_positions, qd_colors);
 	std::cout << "Draw mr Hanky " << val << std::endl;
 };
 
@@ -387,17 +400,43 @@ void pscx_gpu::_gpu::Gp0ImageStore() {
 };
 
 void pscx_gpu::_gpu::Gp0QuadShadedOpaque() {
+	_position qd_positions[4] = {
+		_position(d_Gp0Command.m_buffer[1]),
+		_position(d_Gp0Command.m_buffer[3]),
+		_position(d_Gp0Command.m_buffer[5]),
+		_position(d_Gp0Command.m_buffer[7])
+	};
+	_color qd_colors[4] = {
+		_color(d_Gp0Command.m_buffer[0]),
+		_color(d_Gp0Command.m_buffer[2]),
+		_color(d_Gp0Command.m_buffer[4]),
+		_color(d_Gp0Command.m_buffer[6])
+	};
+	d_render.PushQuad(qd_positions, qd_colors);
 	std::cout << "Gp0QuadShadedOpaque" << std::endl;
 };
 
 void pscx_gpu::_gpu::Gp0TriangleShadedOpaque() {
 	_position tr_positions[3] = { _position(d_Gp0Command.m_buffer[1]), _position(d_Gp0Command.m_buffer[3]),_position(d_Gp0Command.m_buffer[5]) };
 	_color tr_colors[3] = { _color(d_Gp0Command.m_buffer[0]),_color(d_Gp0Command.m_buffer[2]) ,_color(d_Gp0Command.m_buffer[4]) };
-//	d_render.PushTriangle();
+	d_render.PushTriangle(tr_positions, tr_colors);
 	std::cout << "pscx_gpu::_gpu::Gp0TriangleShadedOpaque" << std::endl;
 };
 
 void pscx_gpu::_gpu::Gp0QuadTextureBlandOpaque() {
+	_position qd_positions[4] = {
+		_position(d_Gp0Command.m_buffer[1]),
+		_position(d_Gp0Command.m_buffer[3]),
+		_position(d_Gp0Command.m_buffer[5]),
+		_position(d_Gp0Command.m_buffer[7])
+	};
+	_color qd_colors[4] = {
+		_color(0x80,0x00,0x00),
+		_color(0x80,0x00,0x00),
+		_color(0x80,0x00,0x00),
+		_color(0x80,0x00,0x00)
+	};
+	d_render.PushQuad(qd_positions, qd_colors);
 	std::cout << "Gp0QuadTextureBlandOpaque" << std::endl;
 };
 

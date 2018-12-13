@@ -23,7 +23,8 @@
 #include <cstdio>
 #include <iostream>
 #include <map>
-
+#include <vector>
+#include "wind.h"
 
 struct _position {
 	GLshort p_Ox;
@@ -44,6 +45,11 @@ struct _color {
 		p_Blue((uint8_t)(val >> 8)),
 		p_Green((uint8_t)(val >> 16))
 	{};
+	_color(uint8_t r, uint8_t b, uint8_t g) :
+		p_Red(r),
+		p_Blue(b),
+		p_Green(g)
+	{};
 };
 
 template<class sometype> struct _tbuffer {
@@ -59,13 +65,12 @@ template<class sometype> struct _tbuffer {
 		glGenBuffers(1, &object);
 		glBindBuffer(GL_ARRAY_BUFFER, object);
 
-
 		GLsizeiptr buffersize = elsize* pscx_memory::VERTEXBUFFERLEN;
 		
 		GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
 
 		
-		glBufferStorage(
+		glBufferData(
 			GL_ARRAY_BUFFER
 			, buffersize
 			, nullptr
@@ -112,9 +117,9 @@ struct _render {
 	
 
 	uint32_t r_nvertices;
-
-	_render() :
-		r_window(NULL)
+	pscx_wind::_wind wind;
+	_render(pscx_wind::_wind r_wind) :
+		wind(r_wind)
 	{		
 			//surface
 
@@ -155,7 +160,12 @@ struct _render {
 	GLuint CompileShader(const GLchar** src,const GLenum shader_type);
 	GLuint LinkProgram(GLuint v_shader, GLuint f_shader);
 	GLuint FindProgramAttrib(GLuint program,const GLchar* attr);
-	void PushTriangle(_tbuffer<_position> positions, _tbuffer<_color> colors);
+	void PushTriangle(_position positions[], _color colors[]);
+	void PushQuad(_position positions[], _color colors[]);
+	void RDraw();
+	void Display();
+	void Gp0DrawingOffset();
+	void CheckForErrors();
 
 	~_render()	{
 		glDeleteVertexArrays(1, &r_vertex_ar_obj);
