@@ -182,12 +182,8 @@ void _cpu::DecodeAndExecute(_instruction instruction) {
 		case 0b010001:
 			OpCop1(instruction);
 			break;
-	/* tbd
 		case 0b010010:
-			OpCop2(instruction);
 			break;
-
-			*/
 		case 0b010011:
 			OpCop3(instruction);
 			break;
@@ -212,12 +208,8 @@ void _cpu::DecodeAndExecute(_instruction instruction) {
 		case 0b100110:
 			OpLwr(instruction);
 			break;
-/*	tbd
 		case 0b101000:
-			OpSb(instruction);
 			break;
-
-			*/
 		case 0b101001:
 			OpSh(instruction);
 			break;
@@ -812,6 +804,8 @@ void _cpu::OpMthi(_instruction instruction) {
 	d_hi = Reg(s);
 };
 
+
+//tbd
 void _cpu::OpRfe(_instruction instruction) {
 	if (instruction.data & 0x3f != 0b010000)
 		return;
@@ -846,7 +840,7 @@ void _cpu::OpSllv(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
-	auto v = Reg(t) << (Reg(s) & 0x1f);
+	uint32_t v = Reg(t) << (Reg(s) & 0x1f);
 	SetReg(d, v);
 };
 
@@ -874,7 +868,7 @@ void _cpu::OpSrav(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
-	uint32_t v = (((int32_t)Reg(t)) >> (Reg(s) & 0x1f));
+	uint32_t v =(uint32_t)(((int32_t)Reg(t)) >> (Reg(s) & 0x1f));
 	SetReg(d, v);
 };
 
@@ -953,6 +947,11 @@ void _cpu::OpCop1(_instruction instruction) {
 	Exception(_exception::e_COPROCESSORERROR);
 };
 
+
+void _cpu::OpCop2(_instruction instruction) {
+	std::cout << "unhandled gte instruction" << std::endl;
+};
+
 void _cpu::OpCop3(_instruction instruction) {
 	Exception(_exception::e_COPROCESSORERROR);
 };
@@ -965,7 +964,7 @@ void _cpu::OpLwl(_instruction instruction) {
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t cur_v = out_regs[t.m_index];
 
-	uint32_t al_addr = addr & !3;
+	uint32_t al_addr = addr & pscx_rustf::Negative(3);
 	uint32_t al_word = this->Load32(al_addr);
 
 	uint32_t v;
@@ -996,7 +995,7 @@ void _cpu::OpLwr(_instruction instruction) {
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t cur_v = out_regs[t.m_index];
 
-	uint32_t al_addr = addr & !3;
+	uint32_t al_addr = addr & pscx_rustf::Negative(3);
 	uint32_t al_word = Load32(al_addr);
 
 	uint32_t v;
@@ -1024,7 +1023,7 @@ void _cpu::OpSwl(_instruction instruction) {
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v = Reg(t);
-	uint32_t al_addr = addr& !3;
+	uint32_t al_addr = addr & pscx_rustf::Negative(3);
 
 	uint32_t cur_mem = Load32(al_addr);
 	uint32_t mem;	//kek
@@ -1054,7 +1053,7 @@ void _cpu::OpSwr(_instruction instruction) {
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v = Reg(t);
-	uint32_t al_addr = addr& !3;
+	uint32_t al_addr = addr & pscx_rustf::Negative(3);
 
 	uint32_t cur_mem = Load32(al_addr);
 	uint32_t mem;	//kek
@@ -1094,6 +1093,7 @@ void _cpu::OpLwc3(_instruction instruction) {
 void _cpu::OpSwc0(_instruction instruction) {
 	Exception(_exception::e_COPROCESSORERROR);
 };
+
 void _cpu::OpSwc1(_instruction instruction) {
 	Exception(_exception::e_COPROCESSORERROR);
 };

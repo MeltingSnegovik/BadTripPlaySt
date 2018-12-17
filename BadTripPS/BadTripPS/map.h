@@ -2,6 +2,7 @@
 
 #include "bios.h"
 #include <iostream>
+#include <limits>
 
 namespace pscx_memory {
 
@@ -90,8 +91,9 @@ namespace pscx_memory {
 
 
 namespace pscx_rustf {
-	bool CheckedSub(uint32_t what, uint32_t how);
-	bool CheckedAdd(uint32_t what, uint32_t how);
+	bool CheckedSub(int32_t what, int32_t how);
+	bool CheckedAdd(int32_t what, int32_t how);
 	uint32_t WrappIntAdd(uint32_t pc, uint32_t incr);
 	uint32_t WrappIntSub(uint32_t pc, uint32_t sub);
-}
+	uint32_t Negative(int32_t val);
+};

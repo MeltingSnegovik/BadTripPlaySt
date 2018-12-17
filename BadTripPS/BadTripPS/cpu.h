@@ -241,6 +241,9 @@ struct _cpu
 		// Coprocessor 1 opcode
 		void OpCop1(_instruction instruction);
 
+		// Coprocessor 2 opcode
+		void OpCop2(_instruction instruction);
+		
 		// Coprocessor 3 opcode
 		void OpCop3(_instruction instruction);
 

@@ -51,20 +51,19 @@ void pscx_memory::_buffer::PushWord(uint32_t word) {
 	m_len |= 1;
 };
 
-bool pscx_rustf::CheckedSub(uint32_t what, uint32_t how) {
-	if (((uint64_t)what - (uint64_t)how) <= 0xffffffff && ((uint64_t)what - (uint64_t)how) >= 0x00000000)
+bool pscx_rustf::CheckedSub(int32_t what, int32_t how) {
+	if (((int64_t)what - (int64_t)how) <= std::numeric_limits<int32_t>::max() && ((int64_t)what - (int64_t)how) >= std::numeric_limits<int32_t>::min())
 		return true;
 	else
 		return false;
 
 };
 
-bool pscx_rustf::CheckedAdd(uint32_t what, uint32_t how) {
-	if (((uint64_t)what + (uint64_t)how) <= 0xffffffff && ((uint64_t)what + (uint64_t)how) >= 0x00000000)
+bool pscx_rustf::CheckedAdd(int32_t what, int32_t how) {
+	if (((int64_t)what + (int64_t)how) <= std::numeric_limits<int32_t>::max() && ((int64_t)what + (int64_t)how) >= std::numeric_limits<int32_t>::min())
 		return true;
 	else
 		return false;
-
 };
 
 uint32_t pscx_rustf::WrappIntAdd(uint32_t pc, uint32_t incr) {
@@ -74,6 +73,10 @@ uint32_t pscx_rustf::WrappIntAdd(uint32_t pc, uint32_t incr) {
 uint32_t pscx_rustf::WrappIntSub(uint32_t pc, uint32_t sub) {
 	return (uint32_t)(pc - sub);
 };
+
+uint32_t pscx_rustf::Negative(int32_t val) {
+	return (std::numeric_limits<int32_t>::max() - val);
+}
 
 // tbd index pg 127
 
