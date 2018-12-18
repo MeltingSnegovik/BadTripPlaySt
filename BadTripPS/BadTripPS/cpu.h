@@ -140,6 +140,7 @@ struct _cpu
 		void Store8(uint32_t addr, uint16_t val);
 
 		void OpSh(_instruction instruction);
+		void OpSb(_instruction instruction);
 		void OpJal(_instruction instruction);
 		void OpAndi(_instruction instruction);
 		void OpJr(_instruction instruction);
