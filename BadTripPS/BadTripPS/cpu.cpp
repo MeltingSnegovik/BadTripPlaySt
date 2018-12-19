@@ -22,8 +22,7 @@ void _cpu::RunNextInstruction() {
 	instruction_c= next_instruction;
 	_instruction new_instruction(Load32(pc));
 	next_instruction = new_instruction;
-	pc = next_pc;
-	next_pc= pscx_rustf::WrappIntAdd(pc,4);
+	pc =pscx_rustf::WrappIntAdd(pc, 4);
 	SetReg(d_regData.d_regIndex, d_regData.d_regValue);
 
 	d_delay_slot = d_branch;
@@ -38,7 +37,8 @@ void _cpu::RunNextInstruction() {
 
 void _cpu::DecodeAndExecute(_instruction instruction) {
 	uint32_t retInstrFunct = instruction.Function();
-	std::cout << "Instruction " << instruction.data << std::endl;
+	file_out << instruction.data << "\n";
+	std::cout << instruction.data << std::endl;
 	switch (retInstrFunct) {
 		case 0b000000:
 			switch (instruction.SubFunction()) {
@@ -992,7 +992,7 @@ void _cpu::OpLwl(_instruction instruction) {
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t cur_v = out_regs[t.m_index];
 
-	uint32_t al_addr = addr & pscx_rustf::Negative(3);
+	uint32_t al_addr = addr & ~3;
 	uint32_t al_word = this->Load32(al_addr);
 
 	uint32_t v;
@@ -1023,7 +1023,7 @@ void _cpu::OpLwr(_instruction instruction) {
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t cur_v = out_regs[t.m_index];
 
-	uint32_t al_addr = addr & pscx_rustf::Negative(3);
+	uint32_t al_addr = addr & ~3;
 	uint32_t al_word = Load32(al_addr);
 
 	uint32_t v;
@@ -1051,7 +1051,7 @@ void _cpu::OpSwl(_instruction instruction) {
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v = Reg(t);
-	uint32_t al_addr = addr & pscx_rustf::Negative(3);
+	uint32_t al_addr = addr & ~3;
 
 	uint32_t cur_mem = Load32(al_addr);
 	uint32_t mem;	//kek
@@ -1081,7 +1081,7 @@ void _cpu::OpSwr(_instruction instruction) {
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v = Reg(t);
-	uint32_t al_addr = addr & pscx_rustf::Negative(3);
+	uint32_t al_addr = addr & ~3;
 
 	uint32_t cur_mem = Load32(al_addr);
 	uint32_t mem;	//kek

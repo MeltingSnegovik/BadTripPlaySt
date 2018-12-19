@@ -12,7 +12,7 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 		std::cout << "unhandled store32 into address " << addr << std::endl;
 	uint32_t abs_addr = pscx_memory::mask_region(addr);
 	uint32_t RetMemContr = pscx_memory::MEMCONTROL.contains(abs_addr);
-	if (RetMemContr = -1) {
+	if (RetMemContr != -1) {
 		switch (RetMemContr) {
 		case 0:
 			if (value != 0x1f000000)

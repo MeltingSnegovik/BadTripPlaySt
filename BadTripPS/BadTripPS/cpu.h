@@ -10,6 +10,8 @@
 #include <cassert>
 #include <climits>
 #include <iostream>
+#include <fstream>
+#include <string>
 
 
 #define BEGIN_BIOS 0xbfc00000
@@ -86,6 +88,7 @@ struct _cpu
 		_interconnect interconnect_c;
 		//like a load in CPU
 		_registerData d_regData;
+		std::ofstream file_out;
 		
 		_cpu(_interconnect inter) :
 			pc(BEGIN_BIOS),
@@ -99,10 +102,11 @@ struct _cpu
 			d_regData(pscx_memory::_regIndex(0x0),0x0),
 			d_hi(0xdeadbeef),
 			d_lo(0xdeadbeef),
-
 			d_branch(false),
 			d_delay_slot(false)
 			{
+				file_out = std::ofstream("D:\\cpp\\BadTripPlaySt\\output.txt");
+				current_pc = pc;
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
 				next_pc = pscx_rustf::WrappIntAdd(BEGIN_BIOS, 4);
