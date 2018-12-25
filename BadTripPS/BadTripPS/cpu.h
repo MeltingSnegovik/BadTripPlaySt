@@ -67,7 +67,7 @@ struct _cpu
 		uint32_t d_epc;
 
 		uint32_t regs_c[32];
-		uint32_t out_regs[32];
+//		uint32_t out_regs[32];
 
 		uint32_t d_hi;
 		uint32_t d_lo;
@@ -89,6 +89,7 @@ struct _cpu
 		//like a load in CPU
 		_registerData d_regData;
 		std::ofstream file_out;
+		std::ifstream golden_res;
 		
 		_cpu(_interconnect inter) :
 			pc(BEGIN_BIOS),
@@ -106,24 +107,26 @@ struct _cpu
 			d_delay_slot(false)
 			{
 				file_out = std::ofstream("D:\\cpp\\BadTripPlaySt\\output.txt");
+				golden_res = std::ifstream("D:\\cpp\\BadTripPlaySt\\golden_result.txt");
 				current_pc = pc;
+				next_pc = pscx_rustf::WrappIntAdd(pc, 4);
 				memset(regs_c, 0xdeadbeef,sizeof(uint32_t)*32);
 				regs_c[0]=0x0;
 				next_pc = pscx_rustf::WrappIntAdd(BEGIN_BIOS, 4);
-				instruction_c = _instruction(_cpu::Load32(BEGIN_BIOS));
+				instruction_c = _cpu::Load32(BEGIN_BIOS);
+				next_instruction = instruction_c;
 				d_regData = _registerData(pscx_memory::_regIndex(0x0), 0x0);
 			};
 
 		void SetDebugOnBreak(bool enable);
 		void RunNextInstruction();
-		uint32_t Load32(uint32_t addr);
 		void DecodeAndExecute(_instruction instruction);
 		void OpLui(_instruction instruction);
 		uint32_t Reg(pscx_memory::_regIndex index);
 		void SetReg(pscx_memory::_regIndex index, uint32_t val);
 		void SetPC(uint32_t f_pc);
 		void OpOri(_instruction instruction);
-		void Store32(uint32_t addr, uint32_t value);
+
 		void OpSw(_instruction instruction);
 		void OpSll(_instruction instruction);
 		void OpAddiu(_instruction instruction);
@@ -139,9 +142,14 @@ struct _cpu
 		//Set on Less Then Unsigned
 		void OpSltu(_instruction instruction);
 		void OpAddu(_instruction instruction);
-
+		
+		_instruction Load32(uint32_t addr);
+		_instruction Load16(uint32_t addr);
+		_instruction Load8(uint32_t addr);
+		
+		void Store32(uint32_t addr, uint32_t value);
 		void Store16(uint32_t addr, uint16_t val);
-		void Store8(uint32_t addr, uint16_t val);
+		void Store8(uint32_t addr, uint8_t val);
 
 		void OpSh(_instruction instruction);
 		void OpSb(_instruction instruction);
@@ -149,7 +157,7 @@ struct _cpu
 		void OpAndi(_instruction instruction);
 		void OpJr(_instruction instruction);
 
-		uint8_t Load8(uint32_t ddr);
+
 
 		//load byte (signed)
 		void OpLb(_instruction instruction);
@@ -206,7 +214,7 @@ struct _cpu
 
 		//Store 8 tbd
 		//load 16
-		uint16_t Load16(uint32_t addr);
+
 
 		// Load Halfword Unsigned
 		void OpLhu(_instruction instruction);
@@ -290,6 +298,8 @@ struct _cpu
 
 		//Illegal instruction
 		void OpIllegal(_instruction instruction);
+
+		void DelayedLoad();
 };
  
 

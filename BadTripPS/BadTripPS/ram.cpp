@@ -26,7 +26,7 @@ void _ram::Store8(uint32_t offset, uint8_t val) {
 };
 
 uint8_t _ram::Load8(uint32_t offset) {
-	return m_data[offset];
+	return (uint8_t)m_data[offset];
 };
 
 void _ram::Store16(uint32_t offset, uint16_t val) {
@@ -40,5 +40,5 @@ void _ram::Store16(uint32_t offset, uint16_t val) {
 uint16_t _ram::Load16(uint32_t offset) {
 	uint16_t b0 = (uint16_t)m_data[offset + 0];
 	uint16_t b1 = (uint16_t)m_data[offset + 1];
-	return b0 | (b1 << 8);
+	return (uint16_t)b0 | (b1 << 8);
 };

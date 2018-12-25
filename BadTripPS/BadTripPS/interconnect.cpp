@@ -1,8 +1,5 @@
-#include <vector>
-#include <iostream>
+
 #include "interconnect.h"
-#include "map.h"
-#include "channel.h"
 
 
 using namespace pscx_memory;
@@ -25,6 +22,12 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 		default:
 			std::cout << "Unhandled write to MEMcontroll register" << std::endl;
 		}
+	};
+
+	uint32_t ans_ram_contrl = pscx_memory::RAM.contains(abs_addr);
+	if (ans_ram_contrl != (-1)) {
+		d_ram.Store32(ans_ram_contrl, value);
+		return;
 	};
 
 	uint32_t ans_irq_contrl = pscx_memory::IRQCONTROL.contains(abs_addr); //tbd
@@ -53,55 +56,6 @@ void _interconnect::Store32(uint32_t addr, uint32_t value) {
 	};
 };
 
-uint32_t _interconnect::Load32(uint32_t addr) {
-	
-	uint32_t abs_addr = pscx_memory::mask_region(addr);
-
-	if (abs_addr % 4 != 0) {
-		std::cout << "Unaligned_load32_address: {:08x}" << abs_addr << std::endl;
-		return 0;
-	};
-
-	uint32_t bios_map_return = BIOS.contains(abs_addr);
-	if (bios_map_return != -1)
-		return d_bios.Load32(bios_map_return);
-
-	uint32_t ram_map_ret = RAM.contains(abs_addr);
-	if (ram_map_ret != -1)
-		return d_ram.Load32(ram_map_ret);
-
-
-	uint32_t irq_map_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
-	if (irq_map_ret != -1) {
-		std::cout << "IRQ_control_read " << irq_map_ret << std::endl;
-		return 0;
-		}
-
-
-	uint32_t dma_map_ret = pscx_memory::DMA.contains(abs_addr);
-	if (dma_map_ret!=-1) {
-		std::cout << "DMA read: " << abs_addr << std::endl;
-		return 0;
-	};
-
-	uint32_t gpu_map_ret = pscx_memory::GPU.contains(abs_addr);
-	if (gpu_map_ret != -1) {
-		std::cout << "gpu read: " << gpu_map_ret << std::endl;
-		switch (gpu_map_ret) {
-		case 4:
-			return 0x1c000000;
-			break;
-		default:
-			return 0;
-			break;
-		};
-		return 0;
-	};
-
-	std::cout << "Unhandled_load32_address: {:08x}" << addr << std::endl;
-	return -1;
-};
-
 void _interconnect::Store16(uint32_t addr, uint16_t val) {
 	if (addr % 2 != 0)
 		std::cout << "Unaligned_store16_address: " << addr << std::endl;
@@ -115,11 +69,13 @@ void _interconnect::Store16(uint32_t addr, uint16_t val) {
 		std::cout << "Unhandled_write_to_timer_register" << timer_map_ret << std::endl;
 		return;
 	}
+	
 	uint32_t ram_mar_ret = pscx_memory::RAM.contains(abs_addr);
 	if (ram_mar_ret != -1) {
 		d_ram.Store16(ram_mar_ret, val);
 		return;
 	}
+	
 	
 	uint32_t irq_mar_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
 	if (irq_mar_ret != -1) {
@@ -143,6 +99,14 @@ void _interconnect::Store8(uint32_t addr, uint8_t val) {
 		return;
 		}
 
+	
+	uint32_t ans_ram_contrl = pscx_memory::RAM.contains(abs_addr);
+	if (ans_ram_contrl != (-1)) {
+		d_ram.Store8(ans_ram_contrl, val);
+		return;
+	};
+	
+
 	uint32_t ans_ram = pscx_memory::RAM.contains(abs_addr);
 	if (res != (-1)) {
 		std::cout << "Unhandled_store8_into_address: " << res << std::endl;
@@ -152,48 +116,107 @@ void _interconnect::Store8(uint32_t addr, uint8_t val) {
 	std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
 };
 
-uint8_t _interconnect::Load8(uint32_t addr) {
+
+_instruction _interconnect::Load32(uint32_t addr) {
+	
 	uint32_t abs_addr = pscx_memory::mask_region(addr);
 
-
-	uint32_t ans_ram = pscx_memory::RAM.contains(abs_addr);
-	if (ans_ram != (-1)) {
-		return d_ram.Load8(ans_ram);
+	if (abs_addr % 4 != 0) {
+		std::cout << "Unaligned_load32_address: {:08x}" << abs_addr << std::endl;
+		return _instruction(0);
 	};
 
-	uint32_t ans = BIOS.contains(abs_addr);
-	if (ans != (-1)) {
-		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
-		return d_bios.Load8(ans);
+	uint32_t bios_map_return = pscx_memory::BIOS.contains(abs_addr);
+	if (bios_map_return != -1)
+		return _instruction(d_bios.Load32(bios_map_return));
+
+	uint32_t ram_map_ret = pscx_memory::RAM.contains(abs_addr);
+	if (ram_map_ret != -1)
+		return _instruction(d_ram.Load32(ram_map_ret));
+
+
+	uint32_t irq_map_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
+	if (irq_map_ret != -1) {
+		std::cout << "IRQ_control_read " << irq_map_ret << std::endl;
+		return _instruction(0);
+		}
+
+
+	uint32_t dma_map_ret = pscx_memory::DMA.contains(abs_addr);
+	if (dma_map_ret!=-1) {
+		std::cout << "DMA read: " << abs_addr << std::endl;
+		return _instruction(0);
 	};
 
-	uint32_t ans_exp = pscx_memory::EXPANSION1.contains(abs_addr);
-	if (ans_exp != (-1)) {
-		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
-		return 0xff;
+	uint32_t gpu_map_ret = pscx_memory::GPU.contains(abs_addr);
+	if (gpu_map_ret != -1) {
+		std::cout << "gpu read: " << gpu_map_ret << std::endl;
+		switch (gpu_map_ret) {
+		case 4:
+			return _instruction(0x1c000000);
+			break;
+		default:
+			return _instruction(0);
+			break;
+		};
+		return _instruction(0);
 	};
-	std::cout << "Unhandled_load8_into_address: " << addr << std::endl;
+
+	std::cout << "Unhandled_load32_address: {:08x}" << addr << std::endl;
+	return _instruction(0);
 };
 
-uint16_t _interconnect::Load16(uint32_t addr) {
+_instruction _interconnect::Load16(uint32_t addr) {
 	uint32_t abs_addr = pscx_memory::mask_region(addr);
 
 	uint32_t spu_map_ret = pscx_memory::SPU.contains(abs_addr);
 	if (spu_map_ret != (-1)) {
 		std::cout << "Unhandled read from spu: " << abs_addr << std::endl;
-		return 0;
+		return _instruction(0);
 	};
 
+	uint32_t bios_ans = BIOS.contains(abs_addr);
+	if (bios_ans != (-1)) {
+		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
+		return _instruction(d_bios.Load16(bios_ans));
+	};
+	
 	uint32_t ram_map_ret = pscx_memory::RAM.contains(abs_addr);
 	if (ram_map_ret != (-1)) {
-		return d_ram.Load16(ram_map_ret);
+		return _instruction(d_ram.Load16(ram_map_ret));
 	};
 
 	uint32_t irq_map_ret = pscx_memory::IRQCONTROL.contains(abs_addr);
 	if (irq_map_ret != (-1)) {
 		std::cout << "IRQ control" << irq_map_ret << std::endl;
-		return 0;
+		return _instruction(0);
 	};
+
+	return _instruction(0);
+};
+
+_instruction _interconnect::Load8(uint32_t addr) {
+	uint32_t abs_addr = pscx_memory::mask_region(addr);
+
+
+	uint32_t ans_ram = pscx_memory::RAM.contains(abs_addr);
+	if (ans_ram != (-1)) {
+		return _instruction(d_ram.Load8(ans_ram));
+	};
+
+	uint32_t ans = BIOS.contains(abs_addr);
+	if (ans != (-1)) {
+		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
+		return _instruction(d_bios.Load8(ans));
+	};
+
+	uint32_t ans_exp = pscx_memory::EXPANSION1.contains(abs_addr);
+	if (ans_exp != (-1)) {
+		//std::cout << "Unhandled_store8_into_address: " << addr << std::endl;
+		return _instruction(0xff);
+	};
+	std::cout << "Unhandled_load8_into_address: " << addr << std::endl;
+	return _instruction(0);
 };
 /*
 uint32_t _interconnect::DmaReg(uint32_t offset) {

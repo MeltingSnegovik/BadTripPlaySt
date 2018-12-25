@@ -4,8 +4,23 @@ void _cpu::SetDebugOnBreak(bool enable) {
 	debugonbreak=enable;
 };
 
-uint32_t _cpu::Load32(uint32_t addr) {
+_instruction _cpu::Load32(uint32_t addr) {
 	return interconnect_c.Load32(addr);
+};
+_instruction _cpu::Load16(uint32_t addr) {
+	return interconnect_c.Load16(addr);
+};
+_instruction _cpu::Load8(uint32_t addr) {
+	return interconnect_c.Load8(addr);
+};
+void _cpu::Store32(uint32_t addr, uint32_t value) {
+	interconnect_c.Store32(addr, value);
+};
+void _cpu::Store16(uint32_t addr, uint16_t val) {
+	interconnect_c.Store16(addr, val);
+};
+void _cpu::Store8(uint32_t addr, uint8_t val) {
+	interconnect_c.Store8(addr, val);
 };
 
 void _cpu::SetPC(uint32_t f_pc) {
@@ -20,25 +35,27 @@ void _cpu::RunNextInstruction() {
 		return;
 	}
 	instruction_c= next_instruction;
-	_instruction new_instruction(Load32(pc));
+	_instruction new_instruction = _cpu::Load32(pc);
 	next_instruction = new_instruction;
-	pc =pscx_rustf::WrappIntAdd(pc, 4);
+	pc = next_pc;
+	next_pc =pscx_rustf::WrappIntAdd(next_pc, 4);
 	SetReg(d_regData.d_regIndex, d_regData.d_regValue);
 
 	d_delay_slot = d_branch;
 	d_branch = false;
-
+	d_regData = _registerData(pscx_memory::_regIndex(0x0), 0x0);
 	this->DecodeAndExecute(instruction_c);
 	//in rust regs_c = out_regs;
-	std::copy(std::begin(out_regs), std::end(out_regs), std::begin(regs_c));
+	//std::copy(std::begin(out_regs), std::end(out_regs), std::begin(regs_c));
 
 };
 
-
 void _cpu::DecodeAndExecute(_instruction instruction) {
+	uint32_t temp_reg; 
+	golden_res >> temp_reg;
+	file_out << instruction.data <<" " << temp_reg << "\n";
+	std::cout << instruction.data << " " << temp_reg << std::endl;
 	uint32_t retInstrFunct = instruction.Function();
-	file_out << instruction.data << "\n";
-	std::cout << instruction.data << std::endl;
 	switch (retInstrFunct) {
 		case 0b000000:
 			switch (instruction.SubFunction()) {
@@ -258,7 +275,7 @@ void _cpu::OpLui(_instruction instruction) {
 	uint32_t i = instruction.ImmValue();
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	uint32_t v = i << 16;
-
+	DelayedLoad();
 	SetReg(t, v);
 };
 
@@ -268,6 +285,7 @@ void _cpu::OpOri(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s(); 
 
 	uint32_t v = Reg(s) | i;
+	DelayedLoad();
 	SetReg(t, v);
 };
 
@@ -304,16 +322,13 @@ void _cpu::SetReg(pscx_memory::_regIndex index, uint32_t value) {
 	regs_c[0] = 0;
 };
 
-void _cpu::Store32(uint32_t addr, uint32_t value) {
-	interconnect_c.Store32(addr, value);
-};
-
 void _cpu::OpSll(_instruction instruction) {
 	uint32_t i = instruction.Shift();
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	pscx_memory::_regIndex d = instruction.RegInd15();
 
 	uint32_t v = Reg(t) << i;
+	DelayedLoad();
 	SetReg(d, v);
 };
 
@@ -323,35 +338,40 @@ void _cpu::OpAddiu(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 
 	uint32_t v = pscx_rustf::WrappIntAdd(Reg(s), i);
+	DelayedLoad();
 	SetReg(t, v);
 };
 
 void _cpu::OpJ(_instruction instruction) {
 	uint32_t i = instruction.ImmJump();
-	pc = ((pc & 0xf0000000) | (i << 2));
+	next_pc = ((pc & 0xf0000000) | (i << 2));
+	d_branch = true;
+	DelayedLoad();
 };
 
 void _cpu::OpOr(_instruction instruction) {
-	/*
-	uint32_t d = instruction.RegInd15();
-	uint32_t s = instruction.s();
-	uint32_t t = instruction.RegIndex();
-	SetReg(d, v);
+	
+	pscx_memory::_regIndex d = instruction.RegInd15();
+	pscx_memory::_regIndex s = instruction.s();
+	pscx_memory::_regIndex t = instruction.RegIndex();
+	
 	uint32_t v = Reg(s) | Reg(t);
-	*/
-	SetReg(instruction.RegInd15(), Reg(instruction.s()) | Reg(instruction.RegIndex()));
+	DelayedLoad();
+
+	SetReg(d, v);
+	//SetReg(instruction.RegInd15(), Reg(instruction.s()) | Reg(instruction.RegIndex()));
 };
 
 void _cpu::OpCop0(_instruction instruction) {
 	switch (instruction.CopOpCode()) {
 	case 0b00000:
-		this->OpMfc0(instruction);
+		OpMfc0(instruction);
 		break;
 	case 0b00100:
-		this->OpMtc0(instruction);
+		OpMtc0(instruction);
 		break;
 	case 0b10000:
-		this->OpRfe(instruction);
+		OpRfe(instruction);
 		break;
 	default:
 		std::cout << "error in OpCop0" << std::endl;
@@ -364,6 +384,7 @@ void _cpu::OpMtc0(_instruction instruction) {
 	pscx_memory::_regIndex cop_r = instruction.RegInd15();
 
 	uint32_t v = this->Reg(cpu_r);
+	DelayedLoad();
 	uint32_t answ;
 	switch (cop_r.m_index) {
 	case 3:
@@ -390,9 +411,10 @@ void _cpu::OpMtc0(_instruction instruction) {
 
 
 void _cpu::Branch(uint32_t offset) {
-	offset = offset << 2;
-	pc = pscx_rustf::WrappIntAdd(pc, offset);
-	pc = pscx_rustf::WrappIntSub(pc, 4);
+	auto nw = offset << 2;
+	next_pc = pscx_rustf::WrappIntAdd(pc, nw);
+	d_branch = true;
+	//pc = pscx_rustf::WrappIntSub(pc, 4);
 };
 
 void _cpu::OpBne(_instruction instruction) {
@@ -402,7 +424,8 @@ void _cpu::OpBne(_instruction instruction) {
 
 	if (Reg(s) != Reg(t)) {
 		Branch(i);
-	}
+	};
+	DelayedLoad();
 };
 
 void _cpu::OpAddi(_instruction instruction) {
@@ -411,6 +434,7 @@ void _cpu::OpAddi(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 
 	int32_t t_s = (int32_t)Reg(s);
+	DelayedLoad();
 	uint32_t v;
 	if (pscx_rustf::CheckedAdd(t_s, i))	{
 		v = (uint32_t)(t_s + i);
@@ -433,13 +457,15 @@ void _cpu::OpLw(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 	
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
+	_instruction temp_i = Load32(addr);
 	uint32_t v;
 	if (addr % 4 == 0) {
-		v=Load32(addr);
+		v=temp_i.data;
 		//SetReg(t, v);  // tbd
 		d_regData = _registerData(t, v);
 	} 
 	else {
+		DelayedLoad();
 		Exception(_exception::e_LOADADDRESSERROR);
 	};
 };
@@ -450,6 +476,7 @@ void _cpu::OpSltu(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
 	uint32_t v = Reg(s) < Reg(t);
+	DelayedLoad();
 	SetReg(d, v);
 };
 
@@ -460,15 +487,8 @@ void _cpu::OpAddu(_instruction instruction) {
 
 	
 	uint32_t  v = pscx_rustf::WrappIntAdd(Reg(s), Reg(t));
+	DelayedLoad();
 	SetReg(d, v);
-};
-
-void _cpu::Store16(uint32_t addr, uint16_t val) {
-	interconnect_c.Store16(addr, val);
-};
-
-void _cpu::Store8(uint32_t addr, uint16_t val) {
-	interconnect_c.Store8(addr, val);
 };
 
 void _cpu::OpSh(_instruction instruction) {
@@ -483,6 +503,7 @@ void _cpu::OpSh(_instruction instruction) {
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v = Reg(t);
+	DelayedLoad();
 
 	if (addr % 2 == 0) {
 		Store16(addr, (uint16_t)v);
@@ -494,8 +515,9 @@ void _cpu::OpSh(_instruction instruction) {
 
 void _cpu::OpJal(_instruction instruction) {
 	uint32_t ra = pc;
-	SetReg(pscx_memory::_regIndex(31), ra);
 	OpJ(instruction);
+	SetReg(pscx_memory::_regIndex(31), ra);
+	d_branch = true;
 };
 
 //op sb
@@ -513,6 +535,7 @@ void _cpu::OpSb(_instruction instruction) {
 	uint32_t v = Reg(t);
 
 //	if (addr % 2 == 0) {
+	DelayedLoad();
 		Store8(addr, (uint8_t)v);
 /*	
 }
@@ -529,16 +552,14 @@ void _cpu::OpAndi(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 
 	uint32_t v = Reg(s) &i;
+	DelayedLoad();
 	SetReg(t, v);
 };
 
 void _cpu::OpJr(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
-	pc = Reg(s);
-};
-
-uint8_t _cpu::Load8(uint32_t addr) {
-	return (uint8_t)interconnect_c.Load8(addr);
+	next_pc = Reg(s);
+	d_branch = true;
 };
 
 void _cpu::OpLb(_instruction instruction) {
@@ -547,7 +568,8 @@ void _cpu::OpLb(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
-	int32_t v = (int8_t)Load8(addr);
+	_instruction temp_i = Load8(addr);
+	uint8_t v = temp_i.data;
 	d_regData= _registerData(t, (uint32_t)v);
 };
 
@@ -559,7 +581,8 @@ void _cpu::OpBeq(_instruction instruction) {
 	if (Reg(s) == Reg(t)) {
 		Branch(i);
 	};
-}
+	DelayedLoad();
+};
 
 void _cpu::OpMfc0(_instruction instruction) {
 	pscx_memory::_regIndex cpu_r = instruction.RegIndex();
@@ -600,6 +623,7 @@ void _cpu::OpAdd(_instruction instruction) {
 
 	int32_t s_int = (int32_t)Reg(s);
 	int32_t t_int = (int32_t)Reg(t);
+	DelayedLoad();
 	if (pscx_rustf::CheckedAdd(s_int, t_int))
 		SetReg(d, (uint32_t)(s_int + t_int));
 	else {
@@ -616,6 +640,7 @@ void _cpu::OpBgtz(_instruction instruction) {
 	if (v > 0) {
 		Branch(i);	
 	};
+	DelayedLoad();
 };
 
 void _cpu::OpBlez(_instruction instruction) {
@@ -625,7 +650,8 @@ void _cpu::OpBlez(_instruction instruction) {
 	int32_t v =(int32_t)Reg(s);
 	if (v<=0){
 		Branch(i);		
-	}
+	};
+	DelayedLoad();
 };
 
 void _cpu::OpLbu(_instruction instruction) {
@@ -634,7 +660,8 @@ void _cpu::OpLbu(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 	
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s),i);
-	uint8_t v = Load8(addr);
+	_instruction temp_i = Load8(addr);
+	uint8_t v = temp_i.data;
 	d_regData = _registerData(t,(uint32_t)v);
 };
 
@@ -642,9 +669,13 @@ void _cpu::OpJalr(_instruction instruction) {
 	pscx_memory::_regIndex d = instruction.RegInd15();
 	pscx_memory::_regIndex s = instruction.s();
 	
-	uint32_t ra=pc;
+	uint32_t ra=next_pc;
+	next_pc = Reg(s);
+	DelayedLoad();
 	SetReg(d,ra);
-	pc=Reg(s);
+
+	d_branch = true;
+	//pc=Reg(s);
 };
 
 //branch if less than zero
@@ -667,8 +698,9 @@ void _cpu::OpBxx(_instruction instruction) {
 	uint32_t ra;
 	pscx_memory::_regIndex RegInd(31);
 	test = test^is_bgez;
+	DelayedLoad();
 	if (is_link){
-		ra=pc;
+		ra=next_pc;
 		SetReg(RegInd,ra);
 	}
 	
@@ -681,7 +713,7 @@ void _cpu::OpSlti(_instruction instruction) {
 	int32_t i =(int32_t)instruction.SignExt();
 	pscx_memory::_regIndex s = instruction.s();
 	pscx_memory::_regIndex t = instruction.RegIndex();
-	
+	DelayedLoad();
 	SetReg(t, (uint32_t)((int32_t)Reg(s) < i)); //tbd
 };
 
@@ -691,6 +723,7 @@ void _cpu::OpSubu(_instruction instruction) {
 	pscx_memory::_regIndex d = instruction.RegInd15();
 	
 	uint32_t v = pscx_rustf::WrappIntSub(Reg(s),Reg(t));
+	DelayedLoad();
 	SetReg(d,v);
 };
 
@@ -700,6 +733,7 @@ void _cpu::OpSra(_instruction instruction) {
 	pscx_memory::_regIndex d = instruction.RegInd15();
 	
 	int32_t v = ((int32_t)Reg(t))>>i;
+	DelayedLoad();
 	SetReg(d,(uint32_t)v);
 };
 
@@ -710,6 +744,8 @@ void _cpu::OpDiv(_instruction instruction) {
 	int32_t n = (int32_t)Reg(s);
 	int32_t d = (int32_t)Reg(t);
 	
+	DelayedLoad();
+
 	if (d==0) {
 		d_hi=(uint32_t)n;
 		
@@ -730,13 +766,14 @@ void _cpu::OpDiv(_instruction instruction) {
 
 void _cpu::OpMflo(_instruction instruction) {
 	pscx_memory::_regIndex d = instruction.RegInd15();
+	DelayedLoad();
 	SetReg(d, d_lo);
 };
 
 //tbd
 void _cpu::OpMfhi(_instruction instruction) {
 	pscx_memory::_regIndex d = instruction.RegInd15();
-//	delayed_load(); 
+	DelayedLoad();
 	SetReg(d, d_hi);
 };
 
@@ -745,8 +782,9 @@ void _cpu::OpSrl(_instruction instruction) {
 	uint32_t i = instruction.Shift();
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	pscx_memory::_regIndex d = instruction.RegInd15();
-	
+
 	uint32_t v = Reg(t) >> i;
+	DelayedLoad();
 	SetReg(d,v);
 };
 
@@ -757,6 +795,7 @@ void _cpu::OpSltiu(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	
 	uint32_t v= (uint32_t)(Reg(s)<i);	
+	DelayedLoad();
 	SetReg(t,v);
 };
 
@@ -767,6 +806,7 @@ void _cpu::OpDivu(_instruction instruction) {
 	uint32_t n = Reg(s);
 	uint32_t d = Reg(t);
 	
+	DelayedLoad();
 	if (d==0){
 		d_hi = n;
 		d_lo = 0xffffffff;
@@ -789,6 +829,8 @@ void _cpu::OpSlt(_instruction instruction) {
 
 	int32_t t_s = (int32_t)Reg(s);
 	int32_t t_t = (int32_t)Reg(t);
+
+	DelayedLoad();
 
 	uint32_t v = (uint32_t)(t_s < t_t);
 	SetReg(d, v);
@@ -818,6 +860,7 @@ void _cpu::Exception(_exception cause) {
 };
 
 void _cpu::OpSysCall(_instruction instruction) {
+	DelayedLoad();
 	Exception(e_SYSCALL);
 };
 
@@ -829,11 +872,13 @@ void _cpu::OpMtlo(_instruction instruction) {
 void _cpu::OpMthi(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 	d_hi = Reg(s);
+	DelayedLoad();
 };
 
 
 //tbd
 void _cpu::OpRfe(_instruction instruction) {
+	DelayedLoad();
 	if (instruction.data & 0x3f != 0b010000)
 		std::cout << "invalid cp0 instr " << instruction.data << std::endl;
 		//	return;	//tbd
@@ -842,10 +887,7 @@ void _cpu::OpRfe(_instruction instruction) {
 	StatReg |= mode >> 2;
 };
 
-uint16_t _cpu::Load16(uint32_t addr) {
-	interconnect_c.Load16(addr);
-	return 0;
-};
+
 
 void _cpu::OpLhu(_instruction instruction) {
 	uint32_t i = instruction.SignExt();
@@ -855,10 +897,12 @@ void _cpu::OpLhu(_instruction instruction) {
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v;
 	if (addr % 2 == 0) {
-		v = (uint32_t)Load16(addr);
+		_instruction temp_i = Load16(addr);
+		v = (uint32_t)temp_i.data;
 		d_regData = _registerData(t, v);
 	}
 	else {
+		DelayedLoad();
 		Exception(_exception::e_LOADADDRESSERROR);
 	};
 };
@@ -869,6 +913,7 @@ void _cpu::OpSllv(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
 	uint32_t v = Reg(t) << (Reg(s) & 0x1f);
+	DelayedLoad();
 	SetReg(d, v);
 };
 
@@ -878,7 +923,8 @@ void _cpu::OpLh(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
-	uint32_t v = (int16_t)Load16(addr);
+	_instruction temp_i = Load16(addr);
+	uint32_t v = temp_i.data;
 	d_regData = _registerData(t, v);
 };
 
@@ -888,6 +934,7 @@ void _cpu::OpNor(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	
 	uint32_t v = ~(Reg(s) | Reg(t)); //bn
+	DelayedLoad();
 	SetReg(d, v);
 };
 
@@ -897,6 +944,7 @@ void _cpu::OpSrav(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
 	uint32_t v =(uint32_t)(((int32_t)Reg(t)) >> (Reg(s) & 0x1f));
+	DelayedLoad();
 	SetReg(d, v);
 };
 
@@ -906,6 +954,7 @@ void _cpu::OpSrlv(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
 	uint32_t v = (Reg(t) >> (Reg(s) & 0x1f));
+	DelayedLoad();
 	SetReg(d, v);
 };
 
@@ -915,8 +964,9 @@ void _cpu::OpMultu(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 	uint64_t a = Reg(s);
 	uint64_t b = Reg(t);
+	DelayedLoad();
 	auto v=a*b;
-	d_hi = (uint32_t)v >> 32;
+	d_hi = (uint32_t)v >> (uint32_t)32;
 	d_lo = (uint32_t)v;
 };
 
@@ -926,10 +976,12 @@ void _cpu::OpXor(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
 	uint32_t v = Reg(s) ^ Reg(t);
+	DelayedLoad();
 	SetReg(d, v);
 };
 
 void _cpu::OpBreak(_instruction instruction) {
+	DelayedLoad();
 	Exception(_exception::e_BREAK);
 };
 
@@ -939,6 +991,8 @@ void _cpu::OpMult(_instruction instruction) {
 
 	int64_t a = (int64_t)Reg(s);
 	int64_t b = (int64_t)Reg(t);
+
+	DelayedLoad();
 
 	uint64_t v = a*b;
 
@@ -953,6 +1007,7 @@ void _cpu::OpSub(_instruction instruction) {
 
 	int32_t a = (int32_t)Reg(s);
 	int32_t b = (int32_t)Reg(t);
+	DelayedLoad();
 
 	if (pscx_rustf::CheckedSub(a, b))
 		SetReg(d, (uint32_t)(a-b));
@@ -967,11 +1022,12 @@ void _cpu::OpXori(_instruction instruction) {
 	uint32_t i = instruction.ImmValue();
 
 	uint32_t v = Reg(s) ^ i;
-
+	DelayedLoad();
 	SetReg(t, v);
 };
 
 void _cpu::OpCop1(_instruction instruction) {
+	DelayedLoad();
 	Exception(_exception::e_COPROCESSORERROR);
 };
 
@@ -990,10 +1046,11 @@ void _cpu::OpLwl(_instruction instruction) {
 	pscx_memory::_regIndex t = instruction.RegIndex();
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
-	uint32_t cur_v = out_regs[t.m_index];
+	uint32_t cur_v = Reg(t);
 
 	uint32_t al_addr = addr & ~3;
-	uint32_t al_word = this->Load32(al_addr);
+	_instruction temp_i = Load32(al_addr);
+	uint32_t al_word = temp_i.data;
 
 	uint32_t v;
 	switch (addr & 3) {
@@ -1021,10 +1078,11 @@ void _cpu::OpLwr(_instruction instruction) {
 	pscx_memory::_regIndex s = instruction.s();
 
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
-	uint32_t cur_v = out_regs[t.m_index];
+	uint32_t cur_v = Reg(t);
 
 	uint32_t al_addr = addr & ~3;
-	uint32_t al_word = Load32(al_addr);
+	_instruction temp_i = Load32(al_addr);
+	uint32_t al_word = temp_i.data;
 
 	uint32_t v;
 	switch (addr & 3) {
@@ -1052,8 +1110,8 @@ void _cpu::OpSwl(_instruction instruction) {
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v = Reg(t);
 	uint32_t al_addr = addr & ~3;
-
-	uint32_t cur_mem = Load32(al_addr);
+	_instruction temp_i = Load32(al_addr);
+	uint32_t cur_mem = temp_i.data;
 	uint32_t mem;	//kek
 	switch (addr & 3) {
 	case 0:
@@ -1069,6 +1127,7 @@ void _cpu::OpSwl(_instruction instruction) {
 		mem = (cur_mem & 0x00000000) | (v >> 0);
 		break;
 	};
+	DelayedLoad();
 	Store32(al_addr, mem);
 };
 
@@ -1082,8 +1141,8 @@ void _cpu::OpSwr(_instruction instruction) {
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s), i);
 	uint32_t v = Reg(t);
 	uint32_t al_addr = addr & ~3;
-
-	uint32_t cur_mem = Load32(al_addr);
+	_instruction temp_i = Load32(al_addr);
+	uint32_t cur_mem = temp_i.data;
 	uint32_t mem;	//kek
 	switch (addr & 3) {
 	case 0:
@@ -1135,6 +1194,12 @@ void _cpu::OpSwc3(_instruction instruction) {
 };
 
 void _cpu::OpIllegal(_instruction instruction) {
+	DelayedLoad();
 	std::cout << "Illegal instruction" << instruction.data << std::endl;
 	Exception(_exception::e_ILLEGALINSTRUCTION);
+};
+
+void _cpu::DelayedLoad() {
+	SetReg(d_regData.d_regIndex, d_regData.d_regValue);
+	d_regData = _registerData(pscx_memory::_regIndex(0x0), 0x0);
 };

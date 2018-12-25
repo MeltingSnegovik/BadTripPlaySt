@@ -26,9 +26,18 @@ uint32_t _bios::Load32(uint32_t offset) {
 	return b0 | (b1 << 8) | (b2 << 16) | (b3<<24);
 };
 
+uint16_t _bios::Load16(uint32_t offset) {
+	uint32_t b0 = data[offset + 0];
+	uint32_t b1 = data[offset + 1];
+
+	return b0 | (b1 << 8);
+};
+
 uint8_t _bios::Load8(uint32_t offset) {
 	return data[offset];
 };
+
+
 
 
 

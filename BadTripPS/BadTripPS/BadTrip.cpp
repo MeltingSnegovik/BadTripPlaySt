@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 	_interconnect Inter= _interconnect(Bios,wind);
 	_cpu Cpu = _cpu(Inter);
 	while (true) {
-		Cpu.RunNextInstruction();
+			Cpu.RunNextInstruction();
 	};
 
 }

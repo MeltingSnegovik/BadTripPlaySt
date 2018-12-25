@@ -81,6 +81,10 @@ namespace pscx_memory {
 	const _map TIMERS = _map(0x1f801100, 0x30);
 	const _map DMA = _map(0x1f801080, 0x80);
 	const _map GPU = _map(0x1f801810, 8);
+	const _map SCRATCHPAD = _map(0x1f800000, 1024);
+	const _map PADMEMCARD = _map(0x1f801040, 32);
+	const _map CDROM =	_map(0x1f801800, 0x4);
+	const _map MDEC = _map(0x801820, 8);
 
 	const uint32_t VERTEXBUFFERLEN = 64 * 1024;
 
