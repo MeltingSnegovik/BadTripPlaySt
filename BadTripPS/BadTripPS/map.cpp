@@ -2,11 +2,15 @@
 
 
 
-uint32_t pscx_memory::_map::contains(uint32_t addr) const{
-	if (addr >= map_x1 && addr < (map_x1 + map_x2))
-		return (addr - map_x1);
-	else
-		return -1;
+bool pscx_memory::_map::contains(uint32_t addr, uint32_t &offset) const{
+	if (addr >= map_x1 && addr < (map_x1 + map_x2)) {
+		offset = addr - map_x1;
+		return true;
+	}
+	else {
+		offset = 0;
+		return false;
+	}
 };
 
 uint32_t pscx_memory::mask_region(uint32_t addr) {
@@ -52,15 +56,14 @@ void pscx_memory::_buffer::PushWord(uint32_t word) {
 };
 
 bool pscx_rustf::CheckedSub(int32_t what, int32_t how) {
-	if (((int64_t)what - (int64_t)how) <= std::numeric_limits<int32_t>::max() && ((int64_t)what - (int64_t)how) >= std::numeric_limits<int32_t>::min())
+	if ((((int64_t)what - (int64_t)how) <= std::numeric_limits<int32_t>::max()) && (((int64_t)what - (int64_t)how) >= std::numeric_limits<int32_t>::min()))
 		return true;
 	else
 		return false;
-
 };
 
 bool pscx_rustf::CheckedAdd(int32_t what, int32_t how) {
-	if (((int64_t)what + (int64_t)how) <= std::numeric_limits<int32_t>::max() && ((int64_t)what + (int64_t)how) >= std::numeric_limits<int32_t>::min())
+	if ((((int64_t)what + (int64_t)how) <= std::numeric_limits<int32_t>::max()) && (((int64_t)what + (int64_t)how) >= std::numeric_limits<int32_t>::min()))
 		return true;
 	else
 		return false;

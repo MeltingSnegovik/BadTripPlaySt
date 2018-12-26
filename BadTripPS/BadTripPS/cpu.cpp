@@ -294,7 +294,7 @@ void _cpu::OpSw(_instruction instruction) {
 	if (StatReg & 0x1000 != 0) {
 		std::cout << "error in OpSw" << std::endl;
 //		return;
-	}
+	};
 
 	uint32_t i = instruction.SignExt();
 	pscx_memory::_regIndex t = instruction.RegIndex();
@@ -302,6 +302,9 @@ void _cpu::OpSw(_instruction instruction) {
 	
 	uint32_t addr = pscx_rustf::WrappIntAdd(Reg(s),i);
 	uint32_t v = Reg(t);
+
+	DelayedLoad();
+
 	if (addr % 4 == 0) {
 		Store32(addr, v);
 	}

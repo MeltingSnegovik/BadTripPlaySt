@@ -34,7 +34,7 @@ namespace pscx_memory {
 			map_x1(start),
 			map_x2(end)
 		{};
-		uint32_t contains(uint32_t addr) const;
+		bool contains(uint32_t addr, uint32_t &offset) const;
 	};
 
 	struct _regIndex
